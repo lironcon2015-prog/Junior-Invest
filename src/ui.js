@@ -81,7 +81,11 @@ export class UI {
     $('#hero-total').textContent = vm.totalKidsValueFmt;
     $('#hero-fx').innerHTML =
       `<span class="material-symbols-outlined text-[16px]">currency_exchange</span> USD/ILS ${vm.fxRate} · ${formatDateHe(vm.fxRateAsOf)}`;
-    $('#kids-grid').innerHTML = vm.kids.map(kidCardHtml).join('');
+    const grid = $('#kids-grid');
+    const n = vm.kids.length;
+    const cols = n <= 1 ? 'grid-cols-1 max-w-xs' : n === 2 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3';
+    grid.className = `grid gap-6 mt-8 relative z-10 w-full max-w-5xl mx-auto ${cols}`;
+    grid.innerHTML = vm.kids.map(kidCardHtml).join('');
   }
 
   _renderHoldings(state, derived) {
@@ -438,7 +442,7 @@ function kidCardHtml(kid) {
   const arrow = kid.xirrSign === 'neg' ? 'trending_down' : 'trending_up';
 
   return `
-    <div class="kid-card w-full sm:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] max-w-[320px] flex-shrink-0 relative overflow-hidden flex flex-col justify-center items-center p-8">
+    <div class="kid-card w-full relative overflow-hidden flex flex-col justify-center items-center p-8">
       <div class="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none rounded-3xl"></div>
       <h3 class="font-headline-md text-2xl font-bold text-on-background tracking-wide mb-3 relative z-10">${escapeHtml(kid.name)}</h3>
       <div class="xirr-badge px-4 py-1.5 rounded-full bg-black/30 backdrop-blur-md text-sm font-data-tabular font-bold ${xirrColor} flex items-center gap-1 mb-5 relative z-10 border border-white/10">
