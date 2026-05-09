@@ -80,7 +80,7 @@ export class UI {
     const vm = dashboardViewModel(state, derived);
     $('#hero-total').textContent = vm.totalKidsValueFmt;
     $('#hero-fx').innerHTML =
-      `<span class="material-symbols-outlined text-[16px]">currency_exchange</span> USD/ILS ${vm.fxRate} · ${vm.fxRateAsOf}`;
+      `<span class="material-symbols-outlined text-[16px]">currency_exchange</span> USD/ILS ${vm.fxRate} · ${formatDateHe(vm.fxRateAsOf)}`;
     $('#kids-grid').innerHTML = vm.kids.map(kidCardHtml).join('');
   }
 
@@ -107,7 +107,7 @@ export class UI {
         <td class="py-5 text-on-surface-variant">${r.totalSharesFmt}</td>
         <td class="py-5 text-on-surface-variant">
           ${r.priceFmt}
-          <span class="text-[10px] uppercase tracking-widest opacity-70 mr-2">${escapeHtml(r.asOf)}</span>
+          <span class="text-[10px] uppercase tracking-widest opacity-70 mr-2">${escapeHtml(formatDateHe(r.asOf))}</span>
         </td>
         <td class="py-5 text-white font-data-tabular">${r.valueFmt}</td>
         <td class="py-5">
@@ -132,7 +132,7 @@ export class UI {
     }
     tbody.innerHTML = vm.rows.map((r) => `
       <tr class="border-b border-white/5 hover:bg-white/[0.02] group">
-        <td class="py-4 pr-4 text-on-surface-variant text-xs">${escapeHtml(r.date)}</td>
+        <td class="py-4 pr-4 text-on-surface-variant text-xs">${escapeHtml(formatDateHe(r.date))}</td>
         <td class="py-4">
           <span class="text-xs uppercase tracking-widest font-semibold ${r.sign === 'pos' ? 'text-secondary' : 'text-primary'}">
             ${escapeHtml(r.label)}
@@ -229,7 +229,7 @@ export class UI {
           <div class="flex items-center gap-3 bg-white/[0.03] border border-white/5 rounded-xl px-4 py-3">
             <div class="flex-1">
               <div class="text-white font-semibold">${escapeHtml(q.ticker)}</div>
-              <div class="text-xs text-on-surface-variant">${escapeHtml(q.company)} · ${escapeHtml(q.asOf)}</div>
+              <div class="text-xs text-on-surface-variant">${escapeHtml(q.company)} · ${escapeHtml(formatDateHe(q.asOf))}</div>
             </div>
             <input type="number" step="0.01" min="0" value="${q.price ?? q.priceUsd}"
                    data-quote="${q.ticker}"
@@ -400,6 +400,13 @@ export class UI {
 }
 
 // ---- helpers ----
+
+function formatDateHe(dateStr) {
+  if (!dateStr) return '';
+  const parts = dateStr.split('-');
+  if (parts.length !== 3) return dateStr;
+  return parts[2] + '/' + parts[1] + '/' + parts[0];
+}
 
 function escapeHtml(s) {
   return String(s == null ? '' : s)
