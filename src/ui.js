@@ -138,10 +138,10 @@ export class UI {
             ${escapeHtml(r.label)}
           </span>
         </td>
-        <td class="py-4 text-white font-medium">${escapeHtml(r.who)}</td>
+        <td class="py-4 text-on-background font-medium">${escapeHtml(r.who)}</td>
         <td class="py-4 text-on-surface-variant text-xs">${escapeHtml(r.details)}</td>
         <td class="py-4 text-left">
-          <span class="font-data-tabular ${r.sign === 'pos' ? 'text-secondary' : 'text-white'}">${escapeHtml(r.amountFmt)}</span>
+          <span class="font-data-tabular ${r.sign === 'pos' ? 'text-secondary' : 'text-on-background'}">${escapeHtml(r.amountFmt)}</span>
           <button data-del-tx="${r.id}" class="opacity-0 group-hover:opacity-100 transition-opacity mr-3 text-on-surface-variant hover:text-primary text-xs">מחק</button>
         </td>
       </tr>
@@ -432,26 +432,26 @@ function toast(msg) {
 
 function kidCardHtml(kid) {
   const xirrColor =
-    kid.xirrSign === 'pos' ? 'text-green-400'
+    kid.xirrSign === 'pos' ? 'text-secondary'
     : kid.xirrSign === 'neg' ? 'text-red-400'
-    : 'text-white/60';
+    : 'text-on-surface-variant';
   const arrow = kid.xirrSign === 'neg' ? 'trending_down' : 'trending_up';
 
   return `
-    <div class="kid-card relative overflow-hidden flex flex-col justify-center items-center p-8">
+    <div class="kid-card w-full sm:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] max-w-[320px] flex-shrink-0 relative overflow-hidden flex flex-col justify-center items-center p-8">
       <div class="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none rounded-3xl"></div>
-      <h3 class="font-headline-md text-2xl font-bold text-white tracking-wide mb-3 relative z-10">${escapeHtml(kid.name)}</h3>
-      <div class="xirr-badge px-4 py-1.5 rounded-full bg-black/40 backdrop-blur-md text-sm font-data-tabular font-bold ${xirrColor} flex items-center gap-1 mb-5 relative z-10 border border-white/10">
+      <h3 class="font-headline-md text-2xl font-bold text-on-background tracking-wide mb-3 relative z-10">${escapeHtml(kid.name)}</h3>
+      <div class="xirr-badge px-4 py-1.5 rounded-full bg-black/30 backdrop-blur-md text-sm font-data-tabular font-bold ${xirrColor} flex items-center gap-1 mb-5 relative z-10 border border-white/10">
         <span class="material-symbols-outlined text-[16px]">${arrow}</span>
         ${escapeHtml(kid.xirrFmt)}
       </div>
       <div class="flex flex-col gap-1 relative z-10 text-center mb-3">
-        <span class="font-label-caps text-[11px] text-white/50 uppercase tracking-[0.2em] font-bold">שווי נוכחי</span>
-        <span class="font-data-tabular text-3xl font-bold text-white tracking-tight drop-shadow-[0_2px_10px_rgba(224,36,197,0.4)]">${escapeHtml(kid.portfolioValueFmt)}</span>
+        <span class="font-label-caps text-[11px] text-on-surface-variant/60 uppercase tracking-[0.2em] font-bold">שווי נוכחי</span>
+        <span class="font-data-tabular text-3xl font-bold text-on-background tracking-tight">${escapeHtml(kid.portfolioValueFmt)}</span>
       </div>
-      <div class="flex items-center gap-2 relative z-10 text-xs text-white/40">
+      <div class="flex items-center gap-2 relative z-10 text-xs text-on-surface-variant/50">
         <span>מזומן:</span>
-        <span class="font-data-tabular text-white/60">${escapeHtml(kid.cashFmt)}</span>
+        <span class="font-data-tabular text-on-surface-variant">${escapeHtml(kid.cashFmt)}</span>
       </div>
     </div>
   `;
