@@ -13,16 +13,16 @@
     theme: {
       extend: {
         colors: {
-          primary: "#8b5cf6",
-          "primary-hover": "#a78bfa",
-          secondary: "#10b981",
-          background: "#020202",
-          surface: "rgba(10, 10, 10, 0.4)",
-          "surface-hover": "rgba(20, 20, 20, 0.6)",
+          primary: "#e024c5",
+          "primary-hover": "#ff4df0",
+          secondary: "#4f46e5",
+          background: "#090014",
+          surface: "rgba(30, 0, 50, 0.4)",
+          "surface-hover": "rgba(50, 0, 80, 0.6)",
           "on-background": "#ffffff",
           "on-surface": "#ffffff",
-          "on-surface-variant": "rgba(255, 255, 255, 0.5)",
-          "border-thin": "rgba(255, 255, 255, 0.05)",
+          "on-surface-variant": "rgba(255, 255, 255, 0.7)",
+          "border-thin": "rgba(224, 36, 197, 0.3)",
         },
         borderRadius: {
           DEFAULT: "0.25rem", lg: "0.5rem", xl: "1rem",
@@ -30,7 +30,7 @@
         },
         spacing: {
           "sidebar-width": "300px", unit: "8px", gutter: "32px",
-          "card-gap": "32px", "container-padding": "48px",
+          "card-gap": "24px", "container-padding": "48px",
         },
         fontFamily: {
           "body-base": ["Hanken Grotesk", "Assistant", "sans-serif"],
@@ -41,7 +41,11 @@
         },
         backgroundImage: {
           "ambient-glow":
-            "radial-gradient(circle at 0% 0%, rgba(139, 92, 246, 0.08) 0%, transparent 40%), radial-gradient(circle at 100% 100%, rgba(59, 130, 246, 0.05) 0%, transparent 40%)",
+            "radial-gradient(circle at 20% 0%, rgba(224, 36, 197, 0.15) 0%, transparent 50%), radial-gradient(circle at 80% 100%, rgba(79, 70, 229, 0.15) 0%, transparent 50%)",
+          "card-gradient": "linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%)",
+        },
+        animation: {
+          'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         },
       },
     },
@@ -49,46 +53,49 @@
 </script>
 <style>
   html { color-scheme: dark; }
-  select option, datalist option { background-color: #1a1a1a; color: #ffffff; }
+  select option, datalist option { background-color: #0f0014; color: #ffffff; }
+
   .material-symbols-outlined {
     font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
     transition: all 0.3s ease;
   }
   .material-symbols-outlined.fill { font-variation-settings: 'FILL' 1; }
-  .icon-glow:hover .material-symbols-outlined { text-shadow: 0 0 10px currentColor; }
+  .icon-glow:hover .material-symbols-outlined { text-shadow: 0 0 12px currentColor; }
 
   .glass-panel {
-    background: rgba(10, 10, 10, 0.3);
-    backdrop-filter: blur(30px);
-    -webkit-backdrop-filter: blur(30px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02), 0 20px 40px rgba(0, 0, 0, 0.5);
+    background: rgba(20, 0, 40, 0.4);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border: 1px solid rgba(224, 36, 197, 0.2);
+    border-top-color: rgba(224, 36, 197, 0.4);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 24px 48px rgba(0, 0, 0, 0.9);
     transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .glass-panel:hover {
-    border-color: rgba(255, 255, 255, 0.08);
-    background: rgba(15, 15, 15, 0.4);
+    border-color: rgba(224, 36, 197, 0.4);
+    background: rgba(30, 0, 60, 0.5);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 30px 60px rgba(0, 0, 0, 0.95), 0 0 40px rgba(224, 36, 197, 0.2);
   }
 
   .neon-button {
-    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-    border: 1px solid rgba(139, 92, 246, 0.3);
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #e024c5, #4f46e5);
+    border: 1px solid rgba(224, 36, 197, 0.5);
+    box-shadow: 0 0 20px rgba(224, 36, 197, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
   .neon-button:hover {
-    box-shadow: 0 0 30px rgba(139, 92, 246, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
-    transform: translateY(-1px);
+    box-shadow: 0 0 35px rgba(224, 36, 197, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    transform: translateY(-2px);
   }
 
   .rtl-nav-item { transition: transform 0.3s ease, background-color 0.3s ease, color 0.3s ease; }
   .rtl-nav-item:hover { transform: translateX(-4px); }
 
-  ::selection { background: rgba(139, 92, 246, 0.3); color: white; }
+  ::selection { background: rgba(224, 36, 197, 0.4); color: white; }
 
   .input-field {
     background: rgba(255,255,255,0.03) !important;
-    border: 1px solid rgba(255,255,255,0.08) !important;
+    border: 1px solid rgba(224,36,197,0.2) !important;
     color: white !important;
     border-radius: 1rem;
     padding: 0.85rem 1rem;
@@ -97,52 +104,153 @@
   }
   .input-field:focus {
     outline: none;
-    border-color: rgba(139,92,246,0.5);
-    box-shadow: 0 0 0 3px rgba(139,92,246,0.1);
+    border-color: rgba(224,36,197,0.8) !important;
+    box-shadow: 0 0 0 4px rgba(224,36,197,0.2);
   }
   .field-label {
     display: block; font-size: 11px;
     text-transform: uppercase; letter-spacing: 0.15em;
-    color: rgba(255,255,255,0.5);
+    color: rgba(255,255,255,0.7);
     margin-bottom: 0.5rem; font-weight: 600;
+  }
+
+  .hero-text-glow {
+    text-shadow: 0 0 60px rgba(224, 36, 197, 0.8), 0 0 20px rgba(255, 255, 255, 0.5);
+  }
+
+  .bg-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(120px);
+    z-index: 0;
+    opacity: 0.7;
+  }
+
+  .orb-container {
+    position: relative;
+    width: 320px;
+    height: 320px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, rgba(224, 36, 197, 0.5), rgba(79, 70, 229, 0.15) 70%, transparent);
+    box-shadow:
+      inset 0 0 60px rgba(224, 36, 197, 0.4),
+      0 0 120px rgba(79, 70, 229, 0.5),
+      0 0 30px rgba(224, 36, 197, 0.6);
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(25px);
+    z-index: 20;
+    animation: floatOrb 6s ease-in-out infinite;
+  }
+
+  @keyframes floatOrb {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-15px) scale(1.03); }
+  }
+
+  .kid-card {
+    background: rgba(30, 0, 50, 0.5);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(224, 36, 197, 0.25);
+    border-radius: 2rem;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      inset 0 0 20px rgba(224, 36, 197, 0.1),
+      0 10px 30px rgba(0,0,0,0.5),
+      0 0 15px rgba(224, 36, 197, 0.15);
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    height: 100%;
+    min-height: 220px;
+    animation: pulseGlow 4s ease-in-out infinite alternate;
+  }
+
+  .kid-card:nth-child(even) {
+    border-color: rgba(79, 70, 229, 0.3);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      inset 0 0 20px rgba(79, 70, 229, 0.1),
+      0 10px 30px rgba(0,0,0,0.5),
+      0 0 15px rgba(79, 70, 229, 0.15);
+    animation: pulseGlowEven 4.5s ease-in-out infinite alternate;
+  }
+
+  @keyframes pulseGlow {
+    0%   { box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 10px 30px rgba(0,0,0,0.5), 0 0 15px rgba(224,36,197,0.15); }
+    100% { box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 10px 30px rgba(0,0,0,0.6), 0 0 25px rgba(224,36,197,0.3); }
+  }
+
+  @keyframes pulseGlowEven {
+    0%   { box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 10px 30px rgba(0,0,0,0.5), 0 0 15px rgba(79,70,229,0.15); }
+    100% { box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 10px 30px rgba(0,0,0,0.6), 0 0 25px rgba(79,70,229,0.3); }
+  }
+
+  .kid-card:hover {
+    transform: translateY(-4px) scale(1.02);
+    border-color: rgba(255, 255, 255, 0.4);
+    z-index: 30;
+  }
+
+  .xirr-badge {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.2);
+  }
+  .font-data-tabular { font-variant-numeric: tabular-nums; }
+
+  #view-dashboard.hyper-bg {
+    background: radial-gradient(ellipse at top, rgba(79, 70, 229, 0.2) 0%, rgba(224, 36, 197, 0.05) 60%, transparent 100%);
+    padding-top: 4rem;
+    border-radius: 3rem;
+    margin-top: -1rem;
+    position: relative;
   }
 </style>
 </head>
-<body class="bg-background text-on-background font-body-base min-h-screen flex bg-ambient-glow" dir="rtl">
+<body class="bg-[#090014] text-on-background font-body-base min-h-screen flex relative overflow-x-hidden" dir="rtl">
+
+<!-- Decorative Background Blobs -->
+<div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+  <div class="bg-blob bg-primary/30 w-[60vw] h-[60vw] top-[-20%] right-[-10%] mix-blend-screen animate-pulse-slow"></div>
+  <div class="bg-blob bg-secondary/30 w-[70vw] h-[70vw] bottom-[-20%] left-[-15%] mix-blend-screen" style="animation: pulse 8s infinite alternate;"></div>
+  <div class="bg-blob bg-primary/20 w-[40vw] h-[40vw] top-[40%] left-[50%] mix-blend-screen" style="animation: pulse 6s infinite alternate;"></div>
+</div>
 
 <!-- Sidebar -->
-<nav class="fixed right-0 top-0 h-full w-sidebar-width z-50 border-l border-white/5 bg-background/40 backdrop-blur-3xl flex-col py-12 px-6 gap-unit hidden md:flex">
-  <div class="mb-14 px-4 flex items-center gap-5">
-    <div class="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]">
+<nav class="fixed right-0 top-0 h-full w-sidebar-width z-50 border-l border-primary/20 bg-background/50 backdrop-blur-3xl flex-col py-12 px-6 gap-unit hidden md:flex shadow-[20px_0_60px_rgba(0,0,0,0.8)]">
+  <div class="mb-14 px-4 flex items-center gap-5 relative z-10">
+    <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/40 to-transparent flex items-center justify-center border border-primary/50 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_0_20px_rgba(224,36,197,0.4)]">
       <span class="material-symbols-outlined text-white text-2xl">account_balance</span>
     </div>
     <div>
       <h1 class="font-headline-md text-2xl font-bold text-white tracking-tight">JuniorInvest</h1>
-      <p class="font-label-caps text-[10px] text-on-surface-variant mt-1 uppercase tracking-widest font-medium">תיק עלית</p>
+      <p class="font-label-caps text-[10px] text-primary mt-1 uppercase tracking-widest font-semibold">תיק עלית</p>
     </div>
   </div>
 
-  <div class="flex-1 flex flex-col gap-2">
-    <a data-nav="dashboard" class="rtl-nav-item flex items-center gap-4 px-6 py-4 rounded-2xl bg-white/5 text-white border border-white/5 cursor-pointer">
-      <span class="material-symbols-outlined fill text-primary">dashboard</span>
+  <div class="flex-1 flex flex-col gap-2 relative z-10">
+    <a data-nav="dashboard" class="rtl-nav-item flex items-center gap-4 px-6 py-4 rounded-2xl bg-white/5 text-white border border-primary/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] cursor-pointer">
+      <span class="material-symbols-outlined fill text-primary drop-shadow-[0_0_8px_rgba(224,36,197,0.8)]">dashboard</span>
       <span class="font-medium tracking-wide">לוח בקרה</span>
     </a>
-    <a data-nav="holdings" class="rtl-nav-item icon-glow flex items-center gap-4 px-6 py-4 rounded-2xl text-on-surface-variant cursor-pointer">
+    <a data-nav="holdings" class="rtl-nav-item icon-glow flex items-center gap-4 px-6 py-4 rounded-2xl text-on-surface-variant hover:text-white cursor-pointer">
       <span class="material-symbols-outlined">account_balance_wallet</span>
       <span class="font-medium tracking-wide">אחזקות</span>
     </a>
-    <a data-nav="ledger" class="rtl-nav-item icon-glow flex items-center gap-4 px-6 py-4 rounded-2xl text-on-surface-variant cursor-pointer">
+    <a data-nav="ledger" class="rtl-nav-item icon-glow flex items-center gap-4 px-6 py-4 rounded-2xl text-on-surface-variant hover:text-white cursor-pointer">
       <span class="material-symbols-outlined">receipt_long</span>
       <span class="font-medium tracking-wide">יומן ופעולות</span>
     </a>
   </div>
 
-  <div class="mt-auto flex flex-col gap-2 pt-8">
+  <div class="mt-auto flex flex-col gap-2 pt-8 relative z-10">
     <button id="btn-export" class="w-full text-white py-3 rounded-2xl font-semibold neon-button flex items-center justify-center gap-2">
       <span class="material-symbols-outlined text-sm">download</span>
       ייצוא JSON
     </button>
-    <button id="btn-import" class="w-full text-on-surface-variant hover:text-white py-3 rounded-2xl flex items-center justify-center gap-2 border border-white/10 hover:bg-white/5 transition">
+    <button id="btn-import" class="w-full text-on-surface-variant hover:text-white py-3 rounded-2xl flex items-center justify-center gap-2 border border-primary/30 hover:bg-white/10 transition hover:border-primary/60">
       <span class="material-symbols-outlined text-sm">upload</span>
       ייבוא JSON
     </button>
@@ -154,31 +262,35 @@
 <main class="flex-1 mr-0 md:mr-sidebar-width p-6 md:p-container-padding flex flex-col gap-card-gap relative z-10 max-w-7xl mx-auto w-full">
 
   <!-- Mobile top bar -->
-  <div class="md:hidden flex justify-between items-center h-16 bg-background/80 backdrop-blur-2xl border-b border-white/5 -mx-6 px-6 mb-2 z-40 sticky top-0">
-    <h1 class="font-headline-md text-xl font-bold text-white">JuniorInvest</h1>
+  <div class="md:hidden flex justify-between items-center h-16 bg-background/80 backdrop-blur-2xl border-b border-primary/30 -mx-6 px-6 mb-2 z-40 sticky top-0">
+    <h1 class="font-headline-md text-xl font-bold text-white flex items-center gap-2">
+      <div class="w-6 h-6 rounded-md bg-gradient-to-br from-primary/50 to-transparent flex items-center justify-center border border-primary/60">
+        <span class="material-symbols-outlined text-white text-[12px]">account_balance</span>
+      </div>
+      JuniorInvest
+    </h1>
     <div class="flex gap-1">
-      <button data-nav="dashboard" class="p-2 text-on-surface-variant"><span class="material-symbols-outlined">dashboard</span></button>
-      <button data-nav="holdings" class="p-2 text-on-surface-variant"><span class="material-symbols-outlined">account_balance_wallet</span></button>
-      <button data-nav="ledger" class="p-2 text-on-surface-variant"><span class="material-symbols-outlined">receipt_long</span></button>
+      <button data-nav="dashboard" class="p-2 text-primary transition-colors drop-shadow-[0_0_8px_rgba(224,36,197,0.8)]"><span class="material-symbols-outlined fill">dashboard</span></button>
+      <button data-nav="holdings" class="p-2 text-on-surface-variant hover:text-white transition-colors"><span class="material-symbols-outlined">account_balance_wallet</span></button>
+      <button data-nav="ledger" class="p-2 text-on-surface-variant hover:text-white transition-colors"><span class="material-symbols-outlined">receipt_long</span></button>
     </div>
   </div>
 
   <!-- ================ DASHBOARD ================ -->
-  <section id="view-dashboard" class="flex flex-col gap-card-gap">
-    <div class="glass-panel rounded-3xl p-8 md:p-12 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-      <div>
-        <h2 class="font-label-caps text-xs text-on-surface-variant uppercase tracking-[0.2em] mb-4 flex items-center gap-3">
-          <span class="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_10px_#8b5cf6]"></span>
+  <section id="view-dashboard" class="flex flex-col gap-card-gap hyper-bg px-4 md:px-8 pb-16">
+    <div class="flex flex-col items-center text-center relative z-10 mb-12">
+      <div class="orb-container">
+        <h2 class="font-label-caps text-sm text-white/80 uppercase tracking-[0.3em] mb-4 flex items-center justify-center gap-3 font-semibold drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]">
+          <span class="w-2 h-2 rounded-full bg-white shadow-[0_0_15px_#fff] animate-pulse"></span>
           שווי תיק כולל (ילדים)
         </h2>
-        <div class="flex items-baseline gap-6 flex-wrap">
-          <span id="hero-total" class="font-display-lg text-5xl md:text-7xl font-bold text-white tracking-tighter drop-shadow-lg">—</span>
+        <span class="font-display-lg text-5xl md:text-7xl font-bold text-white tracking-tighter hero-text-glow relative tabular-nums" id="hero-total">—</span>
+        <div class="mt-6 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur-xl shadow-[0_4px_20px_rgba(224,36,197,0.3)]">
+          <p class="text-white text-xs font-medium tracking-wide" id="hero-fx">—</p>
         </div>
-        <p id="hero-fx" class="text-on-surface-variant mt-4 text-sm flex items-center gap-2">—</p>
       </div>
     </div>
-
-    <div id="kids-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-card-gap"></div>
+    <div id="kids-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4 relative z-10 w-full max-w-5xl mx-auto"></div>
   </section>
 
   <!-- ================ HOLDINGS ================ -->
@@ -193,7 +305,7 @@
       <div class="overflow-x-auto">
         <table class="w-full text-right border-collapse">
           <thead>
-            <tr class="border-b border-white/5 font-label-caps text-[11px] text-on-surface-variant uppercase tracking-[0.15em]">
+            <tr class="border-b border-white/10 font-label-caps text-[11px] text-on-surface-variant uppercase tracking-[0.15em]">
               <th class="py-5 font-semibold pr-4">נכס</th>
               <th class="py-5 font-semibold">סה״כ מניות (ילדים)</th>
               <th class="py-5 font-semibold">מחיר נוכחי</th>
@@ -201,13 +313,13 @@
               <th class="py-5 font-semibold">פיצול בין הילדים</th>
             </tr>
           </thead>
-          <tbody id="holdings-tbody" class="font-data-tabular text-sm text-white"></tbody>
+          <tbody id="holdings-tbody" class="font-data-tabular tabular-nums text-sm text-white font-bold"></tbody>
         </table>
       </div>
     </div>
 
     <div class="glass-panel rounded-3xl p-8 md:p-10">
-      <h3 class="font-headline-md text-xl font-bold text-white mb-6">ציטוטים (USD)</h3>
+      <h3 class="font-headline-md text-xl font-bold text-white mb-6">ציטוטים</h3>
       <div id="settings-quotes" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
     </div>
   </section>
@@ -237,7 +349,7 @@
       <form id="form-deposit" class="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div><label class="field-label">תאריך</label><input class="input-field" type="date" name="date" required /></div>
         <div><label class="field-label">ילד/ה</label><select id="dep-kidId" class="input-field" name="kidId" required></select></div>
-        <div><label class="field-label">סכום (₪)</label><input class="input-field" type="number" step="0.01" min="0.01" name="amountIls" required /></div>
+        <div><label class="field-label">סכום (₪)</label><input class="input-field tabular-nums" type="number" step="0.01" min="0.01" name="amountIls" required /></div>
         <div><label class="field-label">הערה</label><input class="input-field" type="text" name="note" placeholder="אופציונלי" /></div>
         <div class="md:col-span-2"><button class="neon-button w-full text-white py-4 rounded-2xl font-semibold">שמור הפקדה</button></div>
       </form>
@@ -260,13 +372,13 @@
             <option value="GBP">GBP</option>
           </select>
         </div>
-        <div><label class="field-label">מחיר למניה</label><input class="input-field" type="number" step="0.0001" min="0.0001" name="price" required /></div>
-        <div id="fxRate-wrapper"><label class="field-label">שער חליפין ל-ILS</label><input class="input-field" type="number" step="0.0001" min="0.0001" name="fxRate" required /></div>
-        <div><label class="field-label">סך כל המניות שנקנו (כולל הורה)</label><input class="input-field" type="number" step="0.00000001" min="0" name="totalShares" required /></div>
-        <div><label class="field-label">מניות לילדים</label><input class="input-field" type="number" step="0.00000001" min="0" name="kidsShares" required /></div>
-        <div><label class="field-label">עמלות (₪)</label><input class="input-field" type="number" step="0.01" min="0" name="feesIls" value="0" /></div>
+        <div><label class="field-label">מחיר למניה</label><input class="input-field tabular-nums" type="number" step="0.0001" min="0.0001" name="price" required /></div>
+        <div id="fxRate-wrapper"><label class="field-label">שער חליפין ל-ILS</label><input class="input-field tabular-nums" type="number" step="0.0001" min="0.0001" name="fxRate" required /></div>
+        <div><label class="field-label">סך כל המניות שנקנו (כולל הורה)</label><input class="input-field tabular-nums" type="number" step="0.00000001" min="0" name="totalShares" required /></div>
+        <div><label class="field-label">מניות לילדים</label><input class="input-field tabular-nums" type="number" step="0.00000001" min="0" name="kidsShares" required /></div>
+        <div><label class="field-label">עמלות (₪)</label><input class="input-field tabular-nums" type="number" step="0.01" min="0" name="feesIls" value="0" /></div>
         <div class="md:col-span-2 flex items-center gap-3">
-          <input type="checkbox" name="externalFunds" id="chk-external-funds" checked class="w-5 h-5 rounded accent-violet-500" />
+          <input type="checkbox" name="externalFunds" id="chk-external-funds" checked class="w-5 h-5 rounded accent-[#e024c5]" />
           <label for="chk-external-funds" class="field-label mb-0 cursor-pointer">כסף חיצוני (לא מהתיק) — לא לנכות ממזומן</label>
         </div>
         <div class="md:col-span-2">
@@ -283,8 +395,8 @@
           <label class="field-label">סימול (Ticker)</label>
           <input class="input-field" type="text" name="ticker" list="ticker-suggestions" required style="text-transform: uppercase;" />
         </div>
-        <div><label class="field-label">מניות שנמכרו (מצד הילדים)</label><input class="input-field" type="number" step="0.00000001" min="0.00000001" name="sharesSold" required /></div>
-        <div><label class="field-label">תקבול נטו (₪)</label><input class="input-field" type="number" step="0.01" min="0" name="netIls" required /></div>
+        <div><label class="field-label">מניות שנמכרו (מצד הילדים)</label><input class="input-field tabular-nums" type="number" step="0.00000001" min="0.00000001" name="sharesSold" required /></div>
+        <div><label class="field-label">תקבול נטו (₪)</label><input class="input-field tabular-nums" type="number" step="0.01" min="0" name="netIls" required /></div>
         <div class="md:col-span-2 text-xs text-on-surface-variant">
           ההקצאה בין הילדים תחושב אוטומטית בשיטת FIFO על פי הלוטים הפתוחים.
         </div>
@@ -300,7 +412,7 @@
         </div>
         <div class="md:col-span-2">
           <label class="field-label">סך הדיבידנד נטו שהתקבל לחשבון (₪) — כולל חלקו של ההורה</label>
-          <input class="input-field" type="number" step="0.01" min="0" name="netIlsTotal" required />
+          <input class="input-field tabular-nums" type="number" step="0.01" min="0" name="netIlsTotal" required />
         </div>
         <div class="md:col-span-2 text-xs text-on-surface-variant">
           רק חלקם של הילדים יזוקף ליתרות המזומן שלהם. חלקו של ההורה אינו מוצג ואינו נשמר במזומן.
@@ -317,7 +429,7 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label class="field-label">שער USD/ILS לשערוך</label>
-          <input id="settings-fx" class="input-field" type="number" step="0.0001" min="0" />
+          <input id="settings-fx" class="input-field tabular-nums" type="number" step="0.0001" min="0" />
         </div>
         <div>
           <label class="field-label">ילדים</label>
@@ -340,7 +452,7 @@
       <div class="overflow-x-auto">
         <table class="w-full text-right border-collapse">
           <thead>
-            <tr class="border-b border-white/5 font-label-caps text-[11px] text-on-surface-variant uppercase tracking-[0.15em]">
+            <tr class="border-b border-white/10 font-label-caps text-[11px] text-on-surface-variant uppercase tracking-[0.15em]">
               <th class="py-4 pr-4">תאריך</th>
               <th class="py-4">פעולה</th>
               <th class="py-4">נושא</th>
@@ -348,7 +460,7 @@
               <th class="py-4 text-left">סכום</th>
             </tr>
           </thead>
-          <tbody id="ledger-tbody" class="font-data-tabular text-sm text-white"></tbody>
+          <tbody id="ledger-tbody" class="font-data-tabular tabular-nums text-sm text-white font-bold"></tbody>
         </table>
       </div>
     </div>
