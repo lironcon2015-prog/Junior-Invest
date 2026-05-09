@@ -25,6 +25,7 @@ export class UI {
     this._bindForm();
     this._bindSettings();
     this._bindIO();
+    this._bindEditDialog();
     this.sm.on('state:changed', () => this.renderAll());
     this.renderAll();
     this._showView(this.activeView);
@@ -212,11 +213,15 @@ export class UI {
         <td class="py-4 text-on-surface-variant text-xs">${escapeHtml(r.details)}</td>
         <td class="py-4 text-left">
           <span class="font-data-tabular ${r.sign === 'pos' ? 'text-secondary' : 'text-on-background'}">${escapeHtml(r.amountFmt)}</span>
-          <button data-del-tx="${r.id}" class="opacity-0 group-hover:opacity-100 transition-opacity mr-3 text-on-surface-variant hover:text-primary text-xs">מחק</button>
+          <button data-edit-tx="${r.id}" class="opacity-0 group-hover:opacity-100 transition-opacity mr-3 text-on-surface-variant hover:text-secondary text-xs">עריכה</button>
+          <button data-del-tx="${r.id}" class="opacity-0 group-hover:opacity-100 transition-opacity text-on-surface-variant hover:text-primary text-xs">מחק</button>
         </td>
       </tr>
     `).join('');
 
+    $$('[data-edit-tx]', tbody).forEach((btn) => {
+      btn.addEventListener('click', () => this._openEditDialog(btn.dataset.editTx));
+    });
     $$('[data-del-tx]', tbody).forEach((btn) => {
       btn.addEventListener('click', () => {
         if (confirm('למחוק את הפעולה?')) this.sm.removeTx(btn.dataset.delTx);
@@ -429,6 +434,150 @@ export class UI {
 
   _setDefaultDate(input) {
     if (input && !input.value) input.value = new Date().toISOString().slice(0, 10);
+  }
+
+  _bindEditDialog() {
+    const dialog = $('#edit-tx-dialog');
+    if (!dialog) return;
+    const close = () => dialog.close();
+    $('#edit-tx-cancel').addEventListener('click', close);
+    $('#edit-tx-close').addEventListener('click', close);
+    dialog.addEventListener('click', (e) => { if (e.target === dialog) close(); });
+
+    $('#edit-tx-save').addEventListener('click', () => {
+      const txId = dialog.dataset.editingTx;
+      const tx = this.sm.getState().ledger.find((t) => t.id === txId);
+      if (!tx) return;
+      const root = $('#edit-tx-fields');
+      const g = (name) => root.querySelector(`[name="${name}"]`);
+      try {
+        const fields = { date: g('date')?.value };
+        switch (tx.type) {
+          case 'DEPOSIT':
+            Object.assign(fields, {
+              kidId: g('kidId')?.value,
+              amountIls: parseFloat(g('amountIls')?.value),
+              note: g('note')?.value || '',
+            });
+            break;
+          case 'BUY': {
+            const allocation = {};
+            $$('[data-edit-alloc-kid]', root).forEach((inp) => {
+              allocation[inp.dataset.editAllocKid] = parseFloat(inp.value);
+            });
+            Object.assign(fields, {
+              ticker: g('ticker')?.value.trim().toUpperCase(),
+              company: g('company')?.value.trim(),
+              totalShares: parseFloat(g('totalShares')?.value),
+              kidsShares: parseFloat(g('kidsShares')?.value),
+              price: parseFloat(g('price')?.value),
+              currency: g('currency')?.value || 'USD',
+              fxRate: parseFloat(g('fxRate')?.value),
+              feesIls: parseFloat(g('feesIls')?.value) || 0,
+              externalFunds: g('externalFunds')?.checked ?? true,
+              allocation,
+            });
+            break;
+          }
+          case 'SELL':
+            Object.assign(fields, {
+              ticker: g('ticker')?.value.trim().toUpperCase(),
+              sharesSold: parseFloat(g('sharesSold')?.value),
+              netIls: parseFloat(g('netIls')?.value),
+            });
+            break;
+          case 'DIVIDEND':
+            Object.assign(fields, {
+              ticker: g('ticker')?.value.trim().toUpperCase(),
+              netIlsTotal: parseFloat(g('netIlsTotal')?.value),
+            });
+            break;
+        }
+        this.sm.patchTx(txId, fields);
+        dialog.close();
+        toast('הפעולה עודכנה');
+      } catch (err) { alert(err.message); }
+    });
+  }
+
+  _openEditDialog(txId) {
+    const state = this.sm.getState();
+    const tx = state.ledger.find((t) => t.id === txId);
+    if (!tx) return;
+    const dialog = $('#edit-tx-dialog');
+    if (!dialog) return;
+
+    const LABELS = { DEPOSIT: 'הפקדה', BUY: 'קנייה', SELL: 'מכירה', DIVIDEND: 'דיבידנד' };
+    $('#edit-tx-title').textContent = `עריכת ${LABELS[tx.type] || tx.type}`;
+    dialog.dataset.editingTx = txId;
+
+    const kids = Object.values(state.kids);
+    const fld = (label, inner, wide = false) =>
+      `<div${wide ? ' class="md:col-span-2"' : ''}><label class="field-label">${label}</label>${inner}</div>`;
+    const numI = (name, val, step = '0.01', min = '0') =>
+      `<input class="input-field tabular-nums" type="number" name="${name}" step="${step}" min="${min}" value="${val}" required />`;
+    const txtI = (name, val, extra = '') =>
+      `<input class="input-field" type="text" name="${name}" value="${escapeHtml(String(val ?? ''))}" ${extra} required />`;
+
+    let html = fld('תאריך', `<input class="input-field" type="date" name="date" value="${tx.date}" required />`);
+
+    switch (tx.type) {
+      case 'DEPOSIT':
+        html += fld('ילד/ה',
+          `<select name="kidId" class="input-field">${kids.map((k) =>
+            `<option value="${k.id}"${k.id === tx.kidId ? ' selected' : ''}>${escapeHtml(k.name)}</option>`
+          ).join('')}</select>`);
+        html += fld('סכום (₪)', numI('amountIls', tx.amountIls, '0.01', '0.01'));
+        html += fld('הערה', `<input class="input-field" type="text" name="note" value="${escapeHtml(tx.note || '')}" />`, false);
+        break;
+
+      case 'BUY': {
+        const price = tx.price ?? tx.priceUsd;
+        const currencies = ['USD', 'ILS-Agorot', 'EUR', 'GBP'];
+        const currSel = `<select name="currency" class="input-field">${currencies.map((c) =>
+          `<option value="${c}"${c === tx.currency ? ' selected' : ''}>${c}</option>`).join('')}</select>`;
+        html += fld('סימול', txtI('ticker', tx.ticker, 'style="text-transform:uppercase"'));
+        html += fld('שם החברה', txtI('company', tx.company || ''));
+        html += fld('מטבע', currSel);
+        html += fld('מחיר למניה', numI('price', price, '0.0001', '0.0001'));
+        html += fld('שער חליפין ל-ILS', numI('fxRate', tx.fxRate, '0.0001', '0.0001'));
+        html += fld('סך מניות (כולל הורה)', numI('totalShares', tx.totalShares, '0.00000001', '0'));
+        html += fld('מניות ילדים', numI('kidsShares', tx.kidsShares, '0.00000001', '0'));
+        html += fld('עמלות (₪)', numI('feesIls', tx.feesIls || 0));
+        html += `<div class="md:col-span-2 flex items-center gap-3">
+          <input type="checkbox" name="externalFunds" id="edit-chk-ext" ${tx.externalFunds ? 'checked' : ''} class="w-5 h-5 rounded accent-[#d0bcff]" />
+          <label for="edit-chk-ext" class="field-label mb-0 cursor-pointer">כסף חיצוני (לא מהתיק)</label>
+        </div>`;
+        html += `<div class="md:col-span-2">
+          <label class="field-label">פיצול אחוזים בין הילדים</label>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            ${Object.entries(tx.allocation).map(([kidId, pct]) => {
+              const kidName = state.kids[kidId]?.name || kidId;
+              return `<label class="flex items-center justify-between gap-3 bg-white/[0.03] border border-white/5 rounded-xl px-4 py-3">
+                <span class="text-sm text-on-surface-variant">${escapeHtml(kidName)} %</span>
+                <input type="number" min="0" max="100" step="0.01" data-edit-alloc-kid="${kidId}" value="${pct}"
+                       class="bg-transparent text-white font-data-tabular text-left w-24 outline-none focus:text-primary" />
+              </label>`;
+            }).join('')}
+          </div>
+        </div>`;
+        break;
+      }
+
+      case 'SELL':
+        html += fld('סימול', txtI('ticker', tx.ticker, 'style="text-transform:uppercase"'));
+        html += fld('מניות שנמכרו', numI('sharesSold', tx.sharesSold, '0.00000001', '0.00000001'));
+        html += fld('תקבול נטו (₪)', numI('netIls', tx.netIls));
+        break;
+
+      case 'DIVIDEND':
+        html += fld('סימול', txtI('ticker', tx.ticker, 'style="text-transform:uppercase"'));
+        html += fld('סך הדיבידנד נטו (₪)', numI('netIlsTotal', tx.netIlsTotal), true);
+        break;
+    }
+
+    $('#edit-tx-fields').innerHTML = html;
+    dialog.showModal();
   }
 
   _showFormFor(type) {

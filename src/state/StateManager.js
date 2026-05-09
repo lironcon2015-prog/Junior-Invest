@@ -174,6 +174,19 @@ export class StateManager {
     this._commit();
   }
 
+  patchTx(txId, fields) {
+    const idx = this.state.ledger.findIndex((t) => t.id === txId);
+    if (idx === -1) throw new Error(`Transaction ${txId} not found`);
+    const updated = { ...this.state.ledger[idx], ...fields };
+    const tentative = {
+      ...this.state,
+      ledger: this.state.ledger.map((t) => t.id === txId ? updated : t),
+    };
+    deriveState(tentative); // throws on invalid data
+    this.state.ledger[idx] = updated;
+    this._commit();
+  }
+
   // ---- Import / Export ------------------------------------------------
 
   exportJson() { return JSON.stringify(this.state, null, 2); }
