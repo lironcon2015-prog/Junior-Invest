@@ -389,7 +389,7 @@ export class UI {
   }
 
   _bindIO() {
-    $('#btn-export').addEventListener('click', () => {
+    const doExport = () => {
       const blob = new Blob([this.sm.exportJson()], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -397,9 +397,13 @@ export class UI {
       a.download = `juniorinvest-${new Date().toISOString().slice(0, 10)}.json`;
       a.click();
       URL.revokeObjectURL(url);
-    });
+    };
+    const doImport = () => $('#import-file').click();
 
-    $('#btn-import').addEventListener('click', () => $('#import-file').click());
+    $('#btn-export').addEventListener('click', doExport);
+    $('#btn-import').addEventListener('click', doImport);
+    $('#btn-export-mobile').addEventListener('click', doExport);
+    $('#btn-import-mobile').addEventListener('click', doImport);
     $('#import-file').addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
