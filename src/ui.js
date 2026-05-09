@@ -431,40 +431,27 @@ function toast(msg) {
 }
 
 function kidCardHtml(kid) {
-  const tone =
-    kid.xirrSign === 'pos' ? 'text-secondary bg-secondary/10 border-secondary/20'
-    : kid.xirrSign === 'neg' ? 'text-primary bg-primary/10 border-primary/20'
-    : 'text-on-surface-variant bg-white/5 border-white/5';
+  const xirrColor =
+    kid.xirrSign === 'pos' ? 'text-green-400'
+    : kid.xirrSign === 'neg' ? 'text-red-400'
+    : 'text-white/60';
   const arrow = kid.xirrSign === 'neg' ? 'trending_down' : 'trending_up';
 
   return `
-    <div class="glass-panel rounded-3xl p-8 md:p-10 relative overflow-hidden flex flex-col h-full">
-      <div class="flex justify-between items-start mb-8 relative z-10">
-        <div class="flex items-center gap-4">
-          <div class="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-2xl font-bold text-white">
-            ${escapeHtml(kid.name.slice(0, 1))}
-          </div>
-          <div>
-            <h3 class="font-headline-md text-2xl font-bold text-white tracking-tight mb-1">${escapeHtml(kid.name)}</h3>
-            <span class="text-on-surface-variant text-[10px] font-medium tracking-widest uppercase bg-white/5 px-3 py-1 rounded-lg border border-white/5">תיק ילד/ה</span>
-          </div>
-        </div>
-        <div class="${tone} border px-3 py-1.5 rounded-xl text-xs font-data-tabular flex items-center gap-2">
-          <span class="material-symbols-outlined text-[14px]">${arrow}</span>
-          ${kid.xirrFmt}
-        </div>
+    <div class="kid-card relative overflow-hidden flex flex-col justify-center items-center p-8">
+      <div class="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none rounded-3xl"></div>
+      <h3 class="font-headline-md text-2xl font-bold text-white tracking-wide mb-3 relative z-10">${escapeHtml(kid.name)}</h3>
+      <div class="xirr-badge px-4 py-1.5 rounded-full bg-black/40 backdrop-blur-md text-sm font-data-tabular font-bold ${xirrColor} flex items-center gap-1 mb-5 relative z-10 border border-white/10">
+        <span class="material-symbols-outlined text-[16px]">${arrow}</span>
+        ${escapeHtml(kid.xirrFmt)}
       </div>
-
-      <div class="mb-6 relative z-10">
-        <div class="font-display-lg text-4xl md:text-5xl font-bold text-white mb-3 tracking-tight">${kid.portfolioValueFmt}</div>
-        <div class="flex items-center gap-3 text-sm text-on-surface-variant">
-          <span>מזומן זמין:</span>
-          <span class="font-data-tabular text-white font-semibold bg-white/5 px-3 py-1 rounded-lg border border-white/5">${kid.cashFmt}</span>
-        </div>
+      <div class="flex flex-col gap-1 relative z-10 text-center mb-3">
+        <span class="font-label-caps text-[11px] text-white/50 uppercase tracking-[0.2em] font-bold">שווי נוכחי</span>
+        <span class="font-data-tabular text-3xl font-bold text-white tracking-tight drop-shadow-[0_2px_10px_rgba(224,36,197,0.4)]">${escapeHtml(kid.portfolioValueFmt)}</span>
       </div>
-
-      <div class="mt-auto pt-6 border-t border-white/5 text-[10px] uppercase tracking-widest text-on-surface-variant">
-        תשואה שנתית (XIRR)
+      <div class="flex items-center gap-2 relative z-10 text-xs text-white/40">
+        <span>מזומן:</span>
+        <span class="font-data-tabular text-white/60">${escapeHtml(kid.cashFmt)}</span>
       </div>
     </div>
   `;
