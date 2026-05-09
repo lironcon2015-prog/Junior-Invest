@@ -1,0 +1,183 @@
+// src/ledger/LedgerEngine.js
+// Pure reducer: (state) -> derived snapshot. No DOM, no I/O.
+// Always re-runs from scratch, so editing/removing past tx is safe.
+
+import { EPS, sumValues, proratePreservingTotal, round8 } from '../util/MathUtils.js';
+import { consumeFifo } from './FifoEngine.js';
+import { distributeDividend } from './DividendEngine.js';
+import { xirr } from '../math/Xirr.js';
+
+export const TX = Object.freeze({
+  DEPOSIT:  'DEPOSIT',
+  BUY:      'BUY',
+  SELL:     'SELL',
+  DIVIDEND: 'DIVIDEND',
+});
+
+function emptyDerived(kids) {
+  const cashByKid = {};
+  const sharesByKidByTicker = {};
+  for (const kidId in kids) {
+    cashByKid[kidId] = 0;
+    sharesByKidByTicker[kidId] = {};
+  }
+  return {
+    cashByKid,
+    sharesByKidByTicker,
+    parentSharesByTicker: {},
+    lots: [],
+    portfolioValueByKid: {},
+    totalKidsValue: 0,
+    xirrByKid: {},
+    warnings: [],
+  };
+}
+
+function bumpShares(map, kidId, ticker, delta) {
+  if (!map[kidId]) map[kidId] = {};
+  map[kidId][ticker] = (map[kidId][ticker] || 0) + delta;
+  if (Math.abs(map[kidId][ticker]) < EPS) delete map[kidId][ticker];
+}
+
+function bumpParent(map, ticker, delta) {
+  map[ticker] = (map[ticker] || 0) + delta;
+  if (Math.abs(map[ticker]) < EPS) delete map[ticker];
+}
+
+// ---- Per-tx handlers --------------------------------------------------
+
+function applyDeposit(d, tx) {
+  if (!(tx.kidId in d.cashByKid)) throw new Error(`DEPOSIT: unknown kidId "${tx.kidId}"`);
+  if (!(tx.amountIls > 0)) throw new Error('DEPOSIT: amount must be > 0');
+  d.cashByKid[tx.kidId] += tx.amountIls;
+}
+
+function applyBuy(d, tx) {
+  const { totalShares, kidsShares, allocation, priceUsd, fxRate, feesIls = 0 } = tx;
+  if (!(totalShares >= kidsShares && kidsShares >= 0)) {
+    throw new Error('BUY: need totalShares >= kidsShares >= 0');
+  }
+  if (!(priceUsd > 0) || !(fxRate > 0)) throw new Error('BUY: price and fxRate must be > 0');
+  const allocSum = sumValues(allocation);
+  if (Math.abs(allocSum - 100) > 1e-3) throw new Error(`BUY: allocation must sum to 100 (got ${allocSum})`);
+  for (const kidId in allocation) {
+    if (!(kidId in d.cashByKid)) throw new Error(`BUY: unknown kidId "${kidId}"`);
+  }
+
+  const parentShares = round8(totalShares - kidsShares);
+  const perKidShares = proratePreservingTotal(kidsShares, allocation, 8);
+
+  for (const kidId in perKidShares) {
+    const shares = perKidShares[kidId];
+    const costIls = shares * priceUsd * fxRate;
+    const feeShare = kidsShares > 0 ? feesIls * (shares / kidsShares) : 0;
+    d.cashByKid[kidId] -= costIls + feeShare;
+    if (d.cashByKid[kidId] < 0) {
+      d.warnings.push({
+        txId: tx.id,
+        kidId,
+        message: `Cash went negative for ${kidId} after BUY ${tx.ticker}`,
+      });
+    }
+    bumpShares(d.sharesByKidByTicker, kidId, tx.ticker, shares);
+  }
+  bumpParent(d.parentSharesByTicker, tx.ticker, parentShares);
+
+  d.lots.push({
+    lotId: tx.id,
+    ticker: tx.ticker,
+    company: tx.company,
+    openDate: tx.date,
+    priceUsd,
+    fxAtBuy: fxRate,
+    remaining: { kids: { ...perKidShares }, parent: parentShares },
+    original:  { kids: { ...perKidShares }, parent: parentShares },
+  });
+}
+
+function applySell(d, tx) {
+  const { ticker, sharesSold, netIls } = tx;
+  if (!(sharesSold > 0)) throw new Error('SELL: sharesSold must be > 0');
+  if (!(netIls >= 0)) throw new Error('SELL: netIls must be >= 0');
+
+  const { consumedByKid } = consumeFifo(d.lots, ticker, sharesSold);
+
+  for (const kidId in consumedByKid) {
+    bumpShares(d.sharesByKidByTicker, kidId, ticker, -consumedByKid[kidId]);
+  }
+
+  const ilsPerKid = proratePreservingTotal(netIls, consumedByKid, 2);
+  for (const kidId in ilsPerKid) {
+    d.cashByKid[kidId] += ilsPerKid[kidId];
+  }
+}
+
+function applyDividend(d, tx) {
+  const { ticker, netIlsTotal } = tx;
+  if (!(netIlsTotal >= 0)) throw new Error('DIVIDEND: netIlsTotal must be >= 0');
+  const { ilsPerKid } = distributeDividend(d.lots, ticker, netIlsTotal);
+  for (const kidId in ilsPerKid) {
+    d.cashByKid[kidId] += ilsPerKid[kidId];
+  }
+}
+
+const HANDLERS = {
+  [TX.DEPOSIT]:  applyDeposit,
+  [TX.BUY]:      applyBuy,
+  [TX.SELL]:     applySell,
+  [TX.DIVIDEND]: applyDividend,
+};
+
+// ---- Public reducer ---------------------------------------------------
+
+export function deriveState(state, today = new Date()) {
+  const d = emptyDerived(state.kids || {});
+
+  const sorted = [...(state.ledger || [])].sort((a, b) => {
+    if (a.date < b.date) return -1;
+    if (a.date > b.date) return 1;
+    const ac = a.createdAt || '', bc = b.createdAt || '';
+    if (ac < bc) return -1;
+    if (ac > bc) return 1;
+    return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+  });
+
+  for (const tx of sorted) {
+    const h = HANDLERS[tx.type];
+    if (!h) throw new Error(`Unknown tx type: ${tx.type}`);
+    h(d, tx);
+  }
+
+  // Live portfolio value (cash + market) per kid in ILS
+  const fxRate = state.settings?.lastFxRate ?? 1;
+  const quotes = state.quotes || {};
+  let total = 0;
+  for (const kidId in state.kids || {}) {
+    let pv = d.cashByKid[kidId] || 0;
+    const tickers = d.sharesByKidByTicker[kidId] || {};
+    for (const ticker in tickers) {
+      const q = quotes[ticker];
+      if (q && typeof q.priceUsd === 'number') {
+        pv += tickers[ticker] * q.priceUsd * fxRate;
+      }
+    }
+    d.portfolioValueByKid[kidId] = pv;
+    total += pv;
+  }
+  d.totalKidsValue = total;
+
+  // XIRR per kid: deposits as negative cashflows, today's PV as positive.
+  for (const kidId in state.kids || {}) {
+    const flows = [];
+    for (const tx of sorted) {
+      if (tx.type === TX.DEPOSIT && tx.kidId === kidId) {
+        flows.push({ date: tx.date, amount: -tx.amountIls });
+      }
+    }
+    const pv = d.portfolioValueByKid[kidId];
+    if (pv > 0) flows.push({ date: today, amount: pv });
+    d.xirrByKid[kidId] = xirr(flows);
+  }
+
+  return d;
+}
