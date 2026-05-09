@@ -106,7 +106,7 @@ export class UI {
         </td>
         <td class="py-5 text-on-surface-variant">${r.totalSharesFmt}</td>
         <td class="py-5 text-on-surface-variant">
-          ${r.priceUsdFmt}
+          ${r.priceFmt}
           <span class="text-[10px] uppercase tracking-widest opacity-70 mr-2">${escapeHtml(r.asOf)}</span>
         </td>
         <td class="py-5 text-white font-data-tabular">${r.valueFmt}</td>
@@ -177,6 +177,16 @@ export class UI {
                  class="bg-transparent text-white font-data-tabular text-left w-24 outline-none focus:text-primary" />
         </label>
       `).join('');
+
+      // Auto-calculate the other kid's % when exactly 2 kids exist
+      const allocInputs = $$('[data-alloc-kid]', allocBox);
+      if (allocInputs.length === 2) {
+        allocInputs.forEach((inp, i) => {
+          inp.addEventListener('input', () => {
+            allocInputs[1 - i].value = Math.max(0, 100 - parseFloat(inp.value || 0)).toFixed(2);
+          });
+        });
+      }
     }
 
     const dl = $('#ticker-suggestions');
@@ -221,10 +231,10 @@ export class UI {
               <div class="text-white font-semibold">${escapeHtml(q.ticker)}</div>
               <div class="text-xs text-on-surface-variant">${escapeHtml(q.company)} · ${escapeHtml(q.asOf)}</div>
             </div>
-            <input type="number" step="0.01" min="0" value="${q.priceUsd}"
+            <input type="number" step="0.01" min="0" value="${q.price ?? q.priceUsd}"
                    data-quote="${q.ticker}"
                    class="bg-transparent text-white font-data-tabular w-28 text-left outline-none focus:text-primary" />
-            <span class="text-xs text-on-surface-variant">USD</span>
+            <span class="text-xs text-on-surface-variant">${escapeHtml(q.currency || 'USD')}</span>
           </div>`).join('')
         : '<p class="text-sm text-on-surface-variant">לא נשמרו ציטוטים. ייווצרו אוטומטית בעת קנייה ראשונה.</p>';
 
@@ -235,7 +245,8 @@ export class UI {
           this.sm.upsertQuote({
             ticker,
             company: q?.company,
-            priceUsd: parseFloat(inp.value),
+            price: parseFloat(inp.value),
+            currency: q?.currency || 'USD',
             asOf: new Date().toISOString().slice(0, 10),
             source: 'manual',
           });
@@ -266,6 +277,18 @@ export class UI {
       } catch (err) { alert(err.message); }
     });
 
+    const currencySel = $('[name="currency"]', $('#form-buy'));
+    const fxRateWrapper = $('#fxRate-wrapper');
+    const fxRateInp = $('[name="fxRate"]', $('#form-buy'));
+    currencySel.addEventListener('change', () => {
+      if (currencySel.value === 'ILS-Agorot') {
+        fxRateWrapper.classList.add('hidden');
+        fxRateInp.value = '0.01';
+      } else {
+        fxRateWrapper.classList.remove('hidden');
+      }
+    });
+
     $('#form-buy').addEventListener('submit', (e) => {
       e.preventDefault();
       const f = e.target;
@@ -281,7 +304,8 @@ export class UI {
           totalShares: parseFloat(f.totalShares.value),
           kidsShares: parseFloat(f.kidsShares.value),
           allocation,
-          priceUsd: parseFloat(f.priceUsd.value),
+          price: parseFloat(f.price.value),
+          currency: f.currency.value,
           fxRate: parseFloat(f.fxRate.value),
           feesIls: parseFloat(f.feesIls.value) || 0,
         });

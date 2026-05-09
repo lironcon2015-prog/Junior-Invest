@@ -53,11 +53,13 @@ function applyDeposit(d, tx) {
 }
 
 function applyBuy(d, tx) {
-  const { totalShares, kidsShares, allocation, priceUsd, fxRate, feesIls = 0 } = tx;
+  const { totalShares, kidsShares, allocation, fxRate, feesIls = 0 } = tx;
+  const price = tx.price ?? tx.priceUsd;           // backward compat
+  const currency = tx.currency ?? 'USD';
   if (!(totalShares >= kidsShares && kidsShares >= 0)) {
     throw new Error('BUY: need totalShares >= kidsShares >= 0');
   }
-  if (!(priceUsd > 0) || !(fxRate > 0)) throw new Error('BUY: price and fxRate must be > 0');
+  if (!(price > 0) || !(fxRate > 0)) throw new Error('BUY: price and fxRate must be > 0');
   const allocSum = sumValues(allocation);
   if (Math.abs(allocSum - 100) > 1e-3) throw new Error(`BUY: allocation must sum to 100 (got ${allocSum})`);
   for (const kidId in allocation) {
@@ -69,7 +71,7 @@ function applyBuy(d, tx) {
 
   for (const kidId in perKidShares) {
     const shares = perKidShares[kidId];
-    const costIls = shares * priceUsd * fxRate;
+    const costIls = shares * price * fxRate;
     const feeShare = kidsShares > 0 ? feesIls * (shares / kidsShares) : 0;
     d.cashByKid[kidId] -= costIls + feeShare;
     if (d.cashByKid[kidId] < 0) {
@@ -88,7 +90,8 @@ function applyBuy(d, tx) {
     ticker: tx.ticker,
     company: tx.company,
     openDate: tx.date,
-    priceUsd,
+    price,
+    currency,
     fxAtBuy: fxRate,
     remaining: { kids: { ...perKidShares }, parent: parentShares },
     original:  { kids: { ...perKidShares }, parent: parentShares },
@@ -157,8 +160,11 @@ export function deriveState(state, today = new Date()) {
     const tickers = d.sharesByKidByTicker[kidId] || {};
     for (const ticker in tickers) {
       const q = quotes[ticker];
-      if (q && typeof q.priceUsd === 'number') {
-        pv += tickers[ticker] * q.priceUsd * fxRate;
+      const qPrice = q?.price ?? q?.priceUsd;       // backward compat
+      const qCurrency = q?.currency ?? 'USD';
+      if (q && typeof qPrice === 'number') {
+        const rate = qCurrency === 'ILS-Agorot' ? 0.01 : fxRate;
+        pv += tickers[ticker] * qPrice * rate;
       }
     }
     d.portfolioValueByKid[kidId] = pv;

@@ -88,12 +88,15 @@ export class StateManager {
 
   // ---- Quotes ---------------------------------------------------------
 
-  upsertQuote({ ticker, company, priceUsd, asOf, source = 'manual' }) {
+  upsertQuote({ ticker, company, price, priceUsd, currency = 'USD', asOf, source = 'manual' }) {
     if (!ticker) throw new Error('Quote needs a ticker');
+    const resolvedPrice = price ?? priceUsd;        // backward compat
+    const existingCurrency = this.state.quotes[ticker]?.currency;
     this.state.quotes[ticker] = {
       ticker,
       company: company || this.state.quotes[ticker]?.company || ticker,
-      priceUsd: Number(priceUsd),
+      price: Number(resolvedPrice),
+      currency: currency || existingCurrency || 'USD',
       asOf: asOf || new Date().toISOString().slice(0, 10),
       source,
     };
@@ -120,13 +123,15 @@ export class StateManager {
     });
   }
 
-  recordBuy({ date, ticker, company, totalShares, kidsShares, allocation, priceUsd, fxRate, feesIls = 0 }) {
+  recordBuy({ date, ticker, company, totalShares, kidsShares, allocation, price, priceUsd, currency = 'USD', fxRate, feesIls = 0 }) {
+    const resolvedPrice = price ?? priceUsd;        // backward compat
     // Auto-seed quote for new ticker so portfolio valuation works immediately
     if (ticker && !this.state.quotes[ticker]) {
       this.state.quotes[ticker] = {
         ticker,
         company: company || ticker,
-        priceUsd: Number(priceUsd),
+        price: Number(resolvedPrice),
+        currency,
         asOf: date,
         source: 'manual',
       };
@@ -141,7 +146,8 @@ export class StateManager {
       allocation: Object.fromEntries(
         Object.entries(allocation).map(([k, v]) => [k, Number(v)])
       ),
-      priceUsd: Number(priceUsd),
+      price: Number(resolvedPrice),
+      currency,
       fxRate: Number(fxRate),
       feesIls: Number(feesIls) || 0,
     });
