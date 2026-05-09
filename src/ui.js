@@ -54,7 +54,7 @@ export class UI {
     $$('[data-nav]').forEach((el) => {
       const active = el.dataset.nav === name;
       // Remove initial-HTML classes that conflict with JS-managed active state
-      el.classList.remove('bg-primary/10', 'text-on-background', 'border-primary/30');
+      el.classList.remove('bg-primary/10', 'text-on-background', 'border', 'border-primary/30', 'shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]');
       el.classList.toggle('bg-white/5', active);
       el.classList.toggle('text-white', active);
       el.classList.toggle('text-on-surface-variant', !active);
