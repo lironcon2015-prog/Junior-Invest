@@ -53,6 +53,8 @@ export class UI {
     });
     $$('[data-nav]').forEach((el) => {
       const active = el.dataset.nav === name;
+      // Remove initial-HTML classes that conflict with JS-managed active state
+      el.classList.remove('bg-primary/10', 'text-on-background', 'border-primary/30');
       el.classList.toggle('bg-white/5', active);
       el.classList.toggle('text-white', active);
       el.classList.toggle('text-on-surface-variant', !active);
@@ -239,7 +241,7 @@ export class UI {
             <input type="number" step="0.01" min="0" value="${q.price ?? q.priceUsd}"
                    data-quote="${q.ticker}"
                    class="bg-transparent text-white font-data-tabular w-28 text-left outline-none focus:text-primary" />
-            <span class="text-xs text-on-surface-variant">${escapeHtml(q.currency || 'USD')}</span>
+            <span class="text-xs text-on-surface-variant w-16 inline-block text-left">${escapeHtml(q.currency || 'USD')}</span>
           </div>`).join('')
         : '<p class="text-sm text-on-surface-variant">לא נשמרו ציטוטים. ייווצרו אוטומטית בעת קנייה ראשונה.</p>';
 
