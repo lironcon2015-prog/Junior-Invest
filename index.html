@@ -197,6 +197,8 @@
   @media (max-width: 767px) {
     #kids-grid { grid-template-columns: 1fr !important; }
   }
+  #edit-tx-dialog { border: none; background: transparent; padding: 0; max-width: min(90vw, 520px); width: 100%; }
+  #edit-tx-dialog::backdrop { background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); }
 </style>
 </head>
 <body class="bg-background text-on-background font-body-base min-h-screen flex relative overflow-x-hidden" dir="rtl">
@@ -453,6 +455,22 @@
   </section>
 
 </main>
+
+<dialog id="edit-tx-dialog">
+  <div class="glass-panel rounded-3xl p-8 text-right w-full">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="text-lg font-bold text-on-background" id="edit-tx-title">עריכת פעולה</h3>
+      <button id="edit-tx-close" class="text-on-surface-variant hover:text-white transition-colors" aria-label="סגור">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+    <div id="edit-tx-fields" class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6"></div>
+    <div class="flex gap-3 justify-start">
+      <button id="edit-tx-save" type="button" class="neon-button px-6 py-2.5 rounded-xl text-sm font-semibold">שמור שינויים</button>
+      <button id="edit-tx-cancel" type="button" class="px-6 py-2.5 rounded-xl text-sm text-on-surface-variant hover:text-white border border-white/10 hover:bg-white/5 transition-colors">ביטול</button>
+    </div>
+  </div>
+</dialog>
 
 <script type="module" src="./app.js"></script>
 </body>
