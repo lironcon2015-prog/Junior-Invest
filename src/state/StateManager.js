@@ -123,7 +123,7 @@ export class StateManager {
     });
   }
 
-  recordBuy({ date, ticker, company, totalShares, kidsShares, allocation, price, priceUsd, currency = 'USD', fxRate, feesIls = 0 }) {
+  recordBuy({ date, ticker, company, totalShares, kidsShares, allocation, price, priceUsd, currency = 'USD', fxRate, feesIls = 0, externalFunds = true }) {
     const resolvedPrice = price ?? priceUsd;        // backward compat
     // Auto-seed quote for new ticker so portfolio valuation works immediately
     if (ticker && !this.state.quotes[ticker]) {
@@ -150,6 +150,7 @@ export class StateManager {
       currency,
       fxRate: Number(fxRate),
       feesIls: Number(feesIls) || 0,
+      externalFunds: Boolean(externalFunds),
     });
   }
 

@@ -71,15 +71,18 @@ function applyBuy(d, tx) {
 
   for (const kidId in perKidShares) {
     const shares = perKidShares[kidId];
-    const costIls = shares * price * fxRate;
-    const feeShare = kidsShares > 0 ? feesIls * (shares / kidsShares) : 0;
-    d.cashByKid[kidId] -= costIls + feeShare;
-    if (d.cashByKid[kidId] < 0) {
-      d.warnings.push({
-        txId: tx.id,
-        kidId,
-        message: `Cash went negative for ${kidId} after BUY ${tx.ticker}`,
-      });
+    if (!tx.externalFunds) {
+      // Deduct from cash only when using internally accumulated cash (from sells/dividends)
+      const costIls = shares * price * fxRate;
+      const feeShare = kidsShares > 0 ? feesIls * (shares / kidsShares) : 0;
+      d.cashByKid[kidId] -= costIls + feeShare;
+      if (d.cashByKid[kidId] < 0) {
+        d.warnings.push({
+          txId: tx.id,
+          kidId,
+          message: `Cash went negative for ${kidId} after BUY ${tx.ticker}`,
+        });
+      }
     }
     bumpShares(d.sharesByKidByTicker, kidId, tx.ticker, shares);
   }
