@@ -315,6 +315,7 @@ export class UI {
           currency: currencyEl?.value || 'USD',
           fxRate: parseFloat(fxRateEl?.value),
           feesIls: parseFloat(f.elements.namedItem('feesIls')?.value) || 0,
+          externalFunds: f.elements.namedItem('externalFunds')?.checked ?? true,
         });
         f.reset();
         this._setDefaultDate(f.elements.namedItem('date'));
