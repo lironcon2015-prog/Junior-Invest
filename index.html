@@ -113,10 +113,6 @@
     margin-bottom: 0.5rem; font-weight: 600;
   }
 
-  .hero-text-glow {
-    text-shadow: 0 0 60px rgba(208, 188, 255, 0.7), 0 0 20px rgba(255, 255, 255, 0.4);
-  }
-
   /* Orb */
   .orb-container {
     position: relative;
@@ -128,6 +124,7 @@
     align-items: center;
     justify-content: center;
     border-radius: 50%;
+    overflow: hidden;
     background: radial-gradient(circle at 30% 30%, rgba(208, 188, 255, 0.4), rgba(78, 222, 163, 0.12) 70%, transparent);
     box-shadow:
       inset 0 0 60px rgba(208, 188, 255, 0.3),
@@ -196,6 +193,9 @@
     border-radius: 3rem;
     margin-top: -1rem;
     position: relative;
+  }
+  @media (max-width: 767px) {
+    #kids-grid { grid-template-columns: 1fr !important; }
   }
 </style>
 </head>
@@ -267,7 +267,7 @@
           <span class="w-2 h-2 rounded-full bg-primary shadow-[0_0_15px_#d0bcff] animate-pulse"></span>
           שווי תיק כולל (ילדים)
         </h2>
-        <span class="font-display-lg text-4xl md:text-5xl font-bold text-on-background tracking-tighter hero-text-glow tabular-nums px-6 w-full text-center leading-tight overflow-hidden" id="hero-total">—</span>
+        <span class="font-display-lg text-3xl md:text-5xl font-bold text-on-background tracking-tighter tabular-nums text-center max-w-[85%]" id="hero-total">—</span>
         <div class="mt-6 px-4 py-1.5 rounded-full bg-white/5 border border-primary/20 backdrop-blur-xl shadow-[0_4px_20px_rgba(208,188,255,0.15)]">
           <p class="text-on-surface-variant text-xs font-medium tracking-wide" id="hero-fx">—</p>
         </div>
