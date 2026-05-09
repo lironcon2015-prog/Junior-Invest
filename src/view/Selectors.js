@@ -1,6 +1,8 @@
 // src/view/Selectors.js
 // State -> ViewModels. Strips parent data so it cannot leak into the UI.
 
+import { xirr } from '../math/Xirr.js';
+
 const ILS = new Intl.NumberFormat('he-IL', { style: 'currency', currency: 'ILS', maximumFractionDigits: 2 });
 const PCT = new Intl.NumberFormat('he-IL', { style: 'percent', maximumFractionDigits: 1 });
 const NUM = new Intl.NumberFormat('he-IL', { maximumFractionDigits: 4 });
@@ -16,8 +18,7 @@ const pickKidPublicFields = (kid) => ({ id: kid.id, name: kid.name });
 
 export function dashboardViewModel(state, derived) {
   const kids = Object.values(state.kids).map((k) => {
-    const xirrRes = derived.xirrByKid[k.id];
-    const xirrVal = xirrRes && typeof xirrRes.value === 'number' ? xirrRes.value : null;
+    const xirrVal = typeof derived.xirrByKid[k.id] === 'number' ? derived.xirrByKid[k.id] : null;
     return {
       ...pickKidPublicFields(k),
       cashIls: derived.cashByKid[k.id] || 0,
@@ -30,11 +31,14 @@ export function dashboardViewModel(state, derived) {
     };
   });
 
+  const totalKidsXirr = typeof derived.totalKidsXirr === 'number' ? derived.totalKidsXirr : null;
   return {
     totalKidsValueFmt: fmtIls(derived.totalKidsValue),
     totalKidsValue: derived.totalKidsValue,
     fxRate: state.settings.lastFxRate,
     fxRateAsOf: state.settings.lastFxRateAsOf,
+    totalKidsXirr,
+    totalKidsXirrFmt: fmtPct(totalKidsXirr),
     kids,
   };
 }
@@ -52,12 +56,53 @@ export function holdingsViewModel(state, derived) {
   }
 
   const fxRate = state.settings.lastFxRate;
+  const today = new Date();
   const rows = Object.values(byTicker).map((h) => {
     const q = state.quotes[h.ticker];
     const price = q?.price ?? q?.priceUsd ?? null;  // backward compat
     const currency = q?.currency ?? 'USD';
     const rate = currency === 'ILS-Agorot' ? 0.01 : fxRate;
     const valueIls = price != null ? h.totalShares * price * rate : null;
+
+    const tickerLots = (derived.lots || []).filter((lot) => {
+      if (lot.ticker !== h.ticker) return false;
+      return Object.values(lot.remaining.kids).reduce((a, b) => a + b, 0) > 0;
+    });
+
+    const lots = tickerLots.map((lot) => {
+      const kidsShares = Object.values(lot.remaining.kids).reduce((a, b) => a + b, 0);
+      const lotCurrency = lot.currency;
+      const buyRate = lotCurrency === 'ILS-Agorot' ? 0.01 : lot.fxAtBuy;
+      const pctChange = price != null ? (price - lot.price) / lot.price : null;
+      let xirrLot = null;
+      if (price != null && kidsShares > 0) {
+        const buyAmt  = -(kidsShares * lot.price * buyRate);
+        const sellAmt =   kidsShares * price * rate;
+        const lotDk = String(lot.openDate).slice(0, 10);
+        const todDk  = today.toISOString().slice(0, 10);
+        if (lotDk !== todDk && buyAmt !== 0) {
+          const res = xirr([{ date: lot.openDate, amount: buyAmt }, { date: today, amount: sellAmt }]);
+          xirrLot = res.value == null ? 0 : res.value;
+        } else {
+          xirrLot = 0;
+        }
+      }
+      const pctSign  = pctChange == null ? 'na' : pctChange  > 0 ? 'pos' : pctChange  < 0 ? 'neg' : 'na';
+      const xirrSign = xirrLot   == null ? 'na' : xirrLot    > 0 ? 'pos' : xirrLot    < 0 ? 'neg' : 'na';
+      return {
+        lotId:           lot.lotId,
+        openDate:        lot.openDate,
+        buyPriceFmt:     `${currencySymbol(lotCurrency)}${lot.price.toFixed(2)}`,
+        currentPriceFmt: price != null ? `${currencySymbol(currency)}${price.toFixed(2)}` : '—',
+        pctChange,
+        pctChangeFmt:    fmtPct(pctChange),
+        pctSign,
+        xirrLot,
+        xirrLotFmt:      fmtPct(xirrLot),
+        xirrSign,
+      };
+    });
+
     return {
       ticker: h.ticker,
       company: q?.company || h.ticker,
@@ -75,6 +120,7 @@ export function holdingsViewModel(state, derived) {
         shares,
         sharesFmt: fmtNum(shares),
       })),
+      lots,
     };
   });
 

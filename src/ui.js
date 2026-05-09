@@ -83,6 +83,21 @@ export class UI {
     $('#hero-total').textContent = vm.totalKidsValueFmt;
     $('#hero-fx').innerHTML =
       `<span class="material-symbols-outlined text-[16px]">currency_exchange</span> USD/ILS ${vm.fxRate} · ${formatDateHe(vm.fxRateAsOf)}`;
+
+    let xirrEl = $('#hero-xirr');
+    if (!xirrEl) {
+      xirrEl = document.createElement('div');
+      xirrEl.id = 'hero-xirr';
+      xirrEl.className = 'mt-3 text-sm font-data-tabular tabular-nums';
+      $('#hero-fx')?.closest('div')?.after(xirrEl);
+    }
+    if (vm.totalKidsValue > 0 && vm.totalKidsXirr != null) {
+      const xirrColor = vm.totalKidsXirr >= 0 ? 'text-emerald-400' : 'text-red-400';
+      xirrEl.innerHTML = `<span class="text-on-surface-variant/70 text-xs">תשואה כוללת (XIRR): </span><span class="font-bold ${xirrColor}">${escapeHtml(vm.totalKidsXirrFmt)}</span>`;
+    } else {
+      xirrEl.innerHTML = '';
+    }
+
     const grid = $('#kids-grid');
     const n = Math.max(vm.kids.length, 1);
     // Use inline style — Tailwind CDN doesn't scan JS strings for dynamic classes
@@ -98,36 +113,84 @@ export class UI {
       tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-on-surface-variant">אין אחזקות עדיין</td></tr>`;
       return;
     }
-    tbody.innerHTML = vm.rows.map((r) => `
-      <tr class="border-b border-white/5 hover:bg-white/[0.02] transition-colors group">
-        <td class="py-5 pr-4">
-          <div class="flex items-center gap-4">
-            <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/5">
-              <span class="material-symbols-outlined text-on-surface-variant text-base">show_chart</span>
+    tbody.innerHTML = vm.rows.map((r) => {
+      const hasLots = r.lots.length > 0;
+      const lotsId = `lots-${r.ticker.replace(/[^a-zA-Z0-9]/g, '_')}`;
+      return `
+        <tr class="border-b border-white/5 hover:bg-white/[0.02] transition-colors group">
+          <td class="py-5 pr-4">
+            <div class="flex items-center gap-3">
+              ${hasLots
+                ? `<button data-lots-toggle="${escapeHtml(lotsId)}" class="flex items-center justify-center w-6 h-6 rounded-lg bg-white/5 hover:bg-white/10 transition-colors shrink-0" title="הצג לוטים">
+                    <span class="material-symbols-outlined text-on-surface-variant text-sm" id="chevron-${escapeHtml(lotsId)}">expand_more</span>
+                  </button>`
+                : '<div class="w-6 shrink-0"></div>'}
+              <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/5 shrink-0">
+                <span class="material-symbols-outlined text-on-surface-variant text-base">show_chart</span>
+              </div>
+              <div>
+                <div class="font-semibold text-white">${escapeHtml(r.ticker)}</div>
+                <div class="text-xs text-on-surface-variant">${escapeHtml(r.company)}</div>
+              </div>
             </div>
-            <div>
-              <div class="font-semibold text-white">${escapeHtml(r.ticker)}</div>
-              <div class="text-xs text-on-surface-variant">${escapeHtml(r.company)}</div>
+          </td>
+          <td class="py-5 text-on-surface-variant">${r.totalSharesFmt}</td>
+          <td class="py-5 text-on-surface-variant">
+            ${r.priceFmt}
+            <span class="text-[10px] uppercase tracking-widest opacity-70 mr-2">${escapeHtml(formatDateHe(r.asOf))}</span>
+          </td>
+          <td class="py-5 text-white font-data-tabular">${r.valueFmt}</td>
+          <td class="py-5">
+            <div class="flex flex-col gap-1 text-xs">
+              ${r.perKid.map((k) => `
+                <div class="flex items-center justify-between gap-3 bg-white/[0.03] border border-white/5 rounded-lg px-3 py-1.5">
+                  <span class="text-on-surface-variant">${escapeHtml(k.kidName)}</span>
+                  <span class="font-data-tabular text-white">${k.sharesFmt}</span>
+                </div>`).join('')}
             </div>
-          </div>
-        </td>
-        <td class="py-5 text-on-surface-variant">${r.totalSharesFmt}</td>
-        <td class="py-5 text-on-surface-variant">
-          ${r.priceFmt}
-          <span class="text-[10px] uppercase tracking-widest opacity-70 mr-2">${escapeHtml(formatDateHe(r.asOf))}</span>
-        </td>
-        <td class="py-5 text-white font-data-tabular">${r.valueFmt}</td>
-        <td class="py-5">
-          <div class="flex flex-col gap-1 text-xs">
-            ${r.perKid.map((k) => `
-              <div class="flex items-center justify-between gap-3 bg-white/[0.03] border border-white/5 rounded-lg px-3 py-1.5">
-                <span class="text-on-surface-variant">${escapeHtml(k.kidName)}</span>
-                <span class="font-data-tabular text-white">${k.sharesFmt}</span>
-              </div>`).join('')}
-          </div>
-        </td>
-      </tr>
-    `).join('');
+          </td>
+        </tr>
+        ${hasLots ? `<tr id="${escapeHtml(lotsId)}" class="hidden border-b border-white/5">
+          <td colspan="5" class="pb-3 px-4">
+            <div class="rounded-xl bg-white/[0.02] border border-white/5 overflow-hidden">
+              <table class="w-full text-right text-xs">
+                <thead>
+                  <tr class="border-b border-white/5">
+                    <th class="py-2 pr-4 font-semibold text-on-surface-variant/60 font-label-caps uppercase tracking-wider">תאריך</th>
+                    <th class="py-2 font-semibold text-on-surface-variant/60 font-label-caps uppercase tracking-wider">מחיר קנייה</th>
+                    <th class="py-2 font-semibold text-on-surface-variant/60 font-label-caps uppercase tracking-wider">מחיר נוכחי</th>
+                    <th class="py-2 font-semibold text-on-surface-variant/60 font-label-caps uppercase tracking-wider">שינוי %</th>
+                    <th class="py-2 pl-4 font-semibold text-on-surface-variant/60 font-label-caps uppercase tracking-wider">תשואה שנתית</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${r.lots.map((lot) => `
+                    <tr class="border-b border-white/[0.03] last:border-0">
+                      <td class="py-2 pr-4 text-on-surface-variant">${escapeHtml(formatDateHe(lot.openDate))}</td>
+                      <td class="py-2 text-on-surface-variant">${escapeHtml(lot.buyPriceFmt)}</td>
+                      <td class="py-2 text-on-surface-variant">${escapeHtml(lot.currentPriceFmt)}</td>
+                      <td class="py-2 font-data-tabular ${lot.pctSign === 'pos' ? 'text-emerald-400' : lot.pctSign === 'neg' ? 'text-red-400' : 'text-on-surface-variant'}">${escapeHtml(lot.pctChangeFmt)}</td>
+                      <td class="py-2 pl-4 font-data-tabular ${lot.xirrSign === 'pos' ? 'text-emerald-400' : lot.xirrSign === 'neg' ? 'text-red-400' : 'text-on-surface-variant'}">${escapeHtml(lot.xirrLotFmt)}</td>
+                    </tr>`).join('')}
+                </tbody>
+              </table>
+            </div>
+          </td>
+        </tr>` : ''}
+      `;
+    }).join('');
+
+    tbody.onclick = (e) => {
+      const btn = e.target.closest('[data-lots-toggle]');
+      if (!btn) return;
+      const lotsId = btn.dataset.lotsToggle;
+      const lotsRow = document.getElementById(lotsId);
+      const chevron = document.getElementById(`chevron-${lotsId}`);
+      if (lotsRow) {
+        const collapsed = lotsRow.classList.toggle('hidden');
+        if (chevron) chevron.style.transform = collapsed ? '' : 'rotate(180deg)';
+      }
+    };
   }
 
   _renderLedger(state) {
