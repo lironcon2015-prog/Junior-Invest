@@ -277,19 +277,23 @@ export class UI {
       } catch (err) { alert(err.message); }
     });
 
-    const currencySel = $('[name="currency"]', $('#form-buy'));
+    const formBuy = $('#form-buy');
+    const currencySel = formBuy.elements.namedItem('currency');
     const fxRateWrapper = $('#fxRate-wrapper');
-    const fxRateInp = $('[name="fxRate"]', $('#form-buy'));
-    currencySel.addEventListener('change', () => {
+    const fxRateInp = formBuy.elements.namedItem('fxRate');
+    const showHideFxRate = () => {
       if (currencySel.value === 'ILS-Agorot') {
         fxRateWrapper.classList.add('hidden');
         fxRateInp.value = '0.01';
       } else {
         fxRateWrapper.classList.remove('hidden');
       }
-    });
+    };
+    currencySel.addEventListener('change', showHideFxRate);
+    // After a reset(), currency reverts to USD but wrapper would stay hidden — restore it
+    formBuy.addEventListener('reset', () => setTimeout(showHideFxRate, 0));
 
-    $('#form-buy').addEventListener('submit', (e) => {
+    formBuy.addEventListener('submit', (e) => {
       e.preventDefault();
       const f = e.target;
       try {
@@ -297,20 +301,23 @@ export class UI {
         $$('[data-alloc-kid]').forEach((inp) => {
           allocation[inp.dataset.allocKid] = parseFloat(inp.value);
         });
+        const priceEl = f.elements.namedItem('price') || f.elements.namedItem('priceUsd');
+        const currencyEl = f.elements.namedItem('currency');
+        const fxRateEl = f.elements.namedItem('fxRate');
         this.sm.recordBuy({
-          date: f.date.value,
-          ticker: f.ticker.value.trim().toUpperCase(),
-          company: f.company.value.trim(),
-          totalShares: parseFloat(f.totalShares.value),
-          kidsShares: parseFloat(f.kidsShares.value),
+          date: f.elements.namedItem('date').value,
+          ticker: f.elements.namedItem('ticker').value.trim().toUpperCase(),
+          company: f.elements.namedItem('company').value.trim(),
+          totalShares: parseFloat(f.elements.namedItem('totalShares').value),
+          kidsShares: parseFloat(f.elements.namedItem('kidsShares').value),
           allocation,
-          price: parseFloat(f.price.value),
-          currency: f.currency.value,
-          fxRate: parseFloat(f.fxRate.value),
-          feesIls: parseFloat(f.feesIls.value) || 0,
+          price: parseFloat(priceEl?.value),
+          currency: currencyEl?.value || 'USD',
+          fxRate: parseFloat(fxRateEl?.value),
+          feesIls: parseFloat(f.elements.namedItem('feesIls')?.value) || 0,
         });
         f.reset();
-        this._setDefaultDate(f.date);
+        this._setDefaultDate(f.elements.namedItem('date'));
         toast('הקנייה נשמרה');
       } catch (err) { alert(err.message); }
     });
