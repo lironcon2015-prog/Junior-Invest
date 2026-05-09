@@ -5,6 +5,9 @@ const ILS = new Intl.NumberFormat('he-IL', { style: 'currency', currency: 'ILS',
 const PCT = new Intl.NumberFormat('he-IL', { style: 'percent', maximumFractionDigits: 1 });
 const NUM = new Intl.NumberFormat('he-IL', { maximumFractionDigits: 4 });
 
+const CURRENCY_SYMBOL = { USD: '$', EUR: '€', GBP: '£', 'ILS-Agorot': '₪ag' };
+const currencySymbol = (c) => CURRENCY_SYMBOL[c] || c || '$';
+
 export const fmtIls = (n) => (n == null || isNaN(n) ? '—' : ILS.format(n));
 export const fmtPct = (n) => (n == null || isNaN(n) ? '—' : PCT.format(n));
 export const fmtNum = (n) => (n == null || isNaN(n) ? '—' : NUM.format(n));
@@ -51,18 +54,21 @@ export function holdingsViewModel(state, derived) {
   const fxRate = state.settings.lastFxRate;
   const rows = Object.values(byTicker).map((h) => {
     const q = state.quotes[h.ticker];
-    const priceUsd = q?.priceUsd ?? null;
-    const valueIls = priceUsd != null ? h.totalShares * priceUsd * fxRate : null;
+    const price = q?.price ?? q?.priceUsd ?? null;  // backward compat
+    const currency = q?.currency ?? 'USD';
+    const rate = currency === 'ILS-Agorot' ? 0.01 : fxRate;
+    const valueIls = price != null ? h.totalShares * price * rate : null;
     return {
       ticker: h.ticker,
       company: q?.company || h.ticker,
       totalShares: h.totalShares,
       totalSharesFmt: fmtNum(h.totalShares),
-      priceUsd,
-      priceUsdFmt: priceUsd != null ? `$${priceUsd.toFixed(2)}` : '—',
+      price,
+      currency,
+      priceFmt: price != null ? `${currencySymbol(currency)}${price.toFixed(2)}` : '—',
       asOf: q?.asOf || '—',
       valueIls,
-      valueFmt: priceUsd != null ? fmtIls(valueIls) : '—',
+      valueFmt: price != null ? fmtIls(valueIls) : '—',
       perKid: Object.entries(h.perKid).map(([kidId, shares]) => ({
         kidId,
         kidName: state.kids[kidId]?.name || kidId,
@@ -90,15 +96,18 @@ export function ledgerViewModel(state) {
             sign: 'pos',
             details: tx.note || '',
           };
-        case 'BUY':
+        case 'BUY': {
           // Show kids' shares only — the account-level total is back-office info.
+          const txPrice = tx.price ?? tx.priceUsd;  // backward compat
+          const txCurrency = tx.currency ?? 'USD';
           return {
             ...base, label: 'קנייה',
             who: tx.ticker,
             amountFmt: `${fmtNum(tx.kidsShares)} מניות לילדים`,
             sign: 'neg',
-            details: `$${tx.priceUsd} × ש״ח ${tx.fxRate} • ${tx.company || ''}`,
+            details: `${currencySymbol(txCurrency)}${txPrice} × ש״ח ${tx.fxRate} • ${tx.company || ''}`,
           };
+        }
         case 'SELL':
           return {
             ...base, label: 'מכירה',
