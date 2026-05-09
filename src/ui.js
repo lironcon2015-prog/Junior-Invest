@@ -82,9 +82,10 @@ export class UI {
     $('#hero-fx').innerHTML =
       `<span class="material-symbols-outlined text-[16px]">currency_exchange</span> USD/ILS ${vm.fxRate} · ${formatDateHe(vm.fxRateAsOf)}`;
     const grid = $('#kids-grid');
-    const n = vm.kids.length;
-    const cols = n <= 1 ? 'grid-cols-1 max-w-xs' : n === 2 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3';
-    grid.className = `grid gap-6 mt-8 relative z-10 w-full max-w-5xl mx-auto ${cols}`;
+    const n = Math.max(vm.kids.length, 1);
+    // Use inline style — Tailwind CDN doesn't scan JS strings for dynamic classes
+    grid.className = 'grid gap-6 mt-8 relative z-10 w-full max-w-5xl mx-auto';
+    grid.style.gridTemplateColumns = `repeat(${Math.min(n, 3)}, minmax(0, 1fr))`;
     grid.innerHTML = vm.kids.map(kidCardHtml).join('');
   }
 
