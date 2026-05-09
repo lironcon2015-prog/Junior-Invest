@@ -14,6 +14,19 @@ export const TX = Object.freeze({
   DIVIDEND: 'DIVIDEND',
 });
 
+function dateKey(d) {
+  if (d instanceof Date) return d.toISOString().slice(0, 10);
+  return String(d).slice(0, 10);
+}
+
+function safeXirr(flows) {
+  if (flows.length < 2) return 0;
+  const first = dateKey(flows[0].date);
+  if (flows.every((f) => dateKey(f.date) === first)) return 0;
+  const result = xirr(flows);
+  return result.value == null ? 0 : result.value;
+}
+
 function emptyDerived(kids) {
   const cashByKid = {};
   const sharesByKidByTicker = {};
@@ -29,6 +42,7 @@ function emptyDerived(kids) {
     portfolioValueByKid: {},
     totalKidsValue: 0,
     xirrByKid: {},
+    totalKidsXirr: 0,
     warnings: [],
   };
 }
@@ -175,18 +189,36 @@ export function deriveState(state, today = new Date()) {
   }
   d.totalKidsValue = total;
 
-  // XIRR per kid: deposits as negative cashflows, today's PV as positive.
+  // XIRR per kid: deposits + external BUYs as negative, today's PV as positive.
+  const totalFlows = [];
   for (const kidId in state.kids || {}) {
     const flows = [];
     for (const tx of sorted) {
       if (tx.type === TX.DEPOSIT && tx.kidId === kidId) {
-        flows.push({ date: tx.date, amount: -tx.amountIls });
+        const f = { date: tx.date, amount: -tx.amountIls };
+        flows.push(f);
+        totalFlows.push({ ...f });
+      } else if (tx.type === TX.BUY && tx.externalFunds === true) {
+        const price = tx.price ?? tx.priceUsd;
+        const txFxRate = tx.fxRate;
+        const feesIls = tx.feesIls || 0;
+        const perKidShares = proratePreservingTotal(tx.kidsShares, tx.allocation, 8);
+        const shares = perKidShares[kidId] || 0;
+        if (shares > 0) {
+          const feeShare = tx.kidsShares > 0 ? feesIls * (shares / tx.kidsShares) : 0;
+          const cost = shares * price * txFxRate + feeShare;
+          const f = { date: tx.date, amount: -cost };
+          flows.push(f);
+          totalFlows.push({ ...f });
+        }
       }
     }
     const pv = d.portfolioValueByKid[kidId];
     if (pv > 0) flows.push({ date: today, amount: pv });
-    d.xirrByKid[kidId] = xirr(flows);
+    d.xirrByKid[kidId] = safeXirr(flows);
   }
+  if (d.totalKidsValue > 0) totalFlows.push({ date: today, amount: d.totalKidsValue });
+  d.totalKidsXirr = safeXirr(totalFlows);
 
   return d;
 }
