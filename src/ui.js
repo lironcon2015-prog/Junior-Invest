@@ -324,7 +324,7 @@ export class UI {
             <input type="number" step="0.01" min="0" value="${q.price ?? q.priceUsd}"
                    data-quote="${q.ticker}"
                    class="bg-transparent text-white font-data-tabular w-28 text-left outline-none focus:text-primary" />
-            <span class="text-xs text-on-surface-variant w-16 inline-block text-left">${escapeHtml(q.currency || 'USD')}</span>
+            <span class="text-xs text-on-surface-variant w-16 inline-block text-left">${escapeHtml(q.currency === 'ILS-Agorot' ? 'אג\'' : (q.currency || 'USD'))}</span>
           </div>`).join('')
         : '<p class="text-sm text-on-surface-variant">לא נשמרו ציטוטים. ייווצרו אוטומטית בעת קנייה ראשונה.</p>';
 
@@ -487,7 +487,7 @@ export class UI {
         }
       }
 
-      const priceFmt = (p, c) => p != null ? `${({ USD: '$', EUR: '€', GBP: '£', 'ILS-Agorot': '₪ag' }[c] || c)}${p.toFixed(2)}` : '—';
+      const priceFmt = (p, c) => p != null ? `${({ USD: '$', EUR: '€', GBP: '£', 'ILS-Agorot': 'אג\'' }[c] || c)}${p.toFixed(2)}` : '—';
       return `
         <tr class="border-b border-white/5 hover:bg-white/[0.02]">
           <td class="py-3 pr-4 font-semibold text-white">${escapeHtml(lot.ticker)}</td>
@@ -649,8 +649,9 @@ export class UI {
       case 'BUY': {
         const price = tx.price ?? tx.priceUsd;
         const currencies = ['USD', 'ILS-Agorot', 'EUR', 'GBP'];
+        const CURR_LABELS = { 'ILS-Agorot': 'אגורות (מקומי)', USD: 'USD', EUR: 'EUR', GBP: 'GBP' };
         const currSel = `<select name="currency" class="input-field">${currencies.map((c) =>
-          `<option value="${c}"${c === tx.currency ? ' selected' : ''}>${c}</option>`).join('')}</select>`;
+          `<option value="${c}"${c === tx.currency ? ' selected' : ''}>${CURR_LABELS[c] || c}</option>`).join('')}</select>`;
         html += fld('סימול', txtI('ticker', tx.ticker, 'style="text-transform:uppercase"'));
         html += fld('שם החברה', txtI('company', tx.company || ''));
         html += fld('מטבע', currSel);

@@ -7,7 +7,7 @@ const ILS = new Intl.NumberFormat('he-IL', { style: 'currency', currency: 'ILS',
 const PCT = new Intl.NumberFormat('he-IL', { style: 'percent', maximumFractionDigits: 1 });
 const NUM = new Intl.NumberFormat('he-IL', { maximumFractionDigits: 4 });
 
-const CURRENCY_SYMBOL = { USD: '$', EUR: '€', GBP: '£', 'ILS-Agorot': '₪ag' };
+const CURRENCY_SYMBOL = { USD: '$', EUR: '€', GBP: '£', 'ILS-Agorot': 'אג\'' };
 const currencySymbol = (c) => CURRENCY_SYMBOL[c] || c || '$';
 
 export const fmtIls = (n) => (n == null || isNaN(n) ? '—' : ILS.format(n));
