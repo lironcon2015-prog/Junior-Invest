@@ -19,6 +19,9 @@ const pickKidPublicFields = (kid) => ({ id: kid.id, name: kid.name });
 export function dashboardViewModel(state, derived) {
   const kids = Object.values(state.kids).map((k) => {
     const xirrVal = typeof derived.xirrByKid[k.id] === 'number' ? derived.xirrByKid[k.id] : null;
+    const kidProfit = derived.profitByKid?.[k.id];
+    const profit = kidProfit?.total ?? 0;
+    const profitPct = kidProfit?.pct ?? 0;
     return {
       ...pickKidPublicFields(k),
       cashIls: derived.cashByKid[k.id] || 0,
@@ -28,10 +31,16 @@ export function dashboardViewModel(state, derived) {
       xirr: xirrVal,
       xirrFmt: fmtPct(xirrVal),
       xirrSign: xirrVal == null ? 'na' : xirrVal >= 0 ? 'pos' : 'neg',
+      profit,
+      profitFmt: fmtIls(profit),
+      profitPct,
+      profitSign: profit >= 0 ? 'pos' : 'neg',
     };
   });
 
   const totalKidsXirr = typeof derived.totalKidsXirr === 'number' ? derived.totalKidsXirr : null;
+  const totalProfit = derived.totalProfit ?? 0;
+  const totalReturnPct = derived.totalReturnPct ?? 0;
   return {
     totalKidsValueFmt: fmtIls(derived.totalKidsValue),
     totalKidsValue: derived.totalKidsValue,
@@ -39,6 +48,9 @@ export function dashboardViewModel(state, derived) {
     fxRateAsOf: state.settings.lastFxRateAsOf,
     totalKidsXirr,
     totalKidsXirrFmt: fmtPct(totalKidsXirr),
+    totalProfit,
+    totalProfitFmt: fmtIls(totalProfit),
+    totalReturnPct,
     kids,
   };
 }

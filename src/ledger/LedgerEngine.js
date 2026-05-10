@@ -42,6 +42,7 @@ function emptyDerived(kids) {
     portfolioValueByKid: {},
     principalByKid: {},
     profitByKid: {},
+    totalKidsPrincipal: 0,
     totalKidsValue: 0,
     xirrByKid: {},
     totalKidsXirr: 0,
@@ -67,6 +68,7 @@ function applyDeposit(d, tx) {
   if (!(tx.amountIls > 0)) throw new Error('DEPOSIT: amount must be > 0');
   d.cashByKid[tx.kidId] += tx.amountIls;
   d.principalByKid[tx.kidId] = (d.principalByKid[tx.kidId] || 0) + tx.amountIls;
+  d.totalKidsPrincipal += tx.amountIls;
 }
 
 function applyBuy(d, tx) {
@@ -104,7 +106,9 @@ function applyBuy(d, tx) {
       // External funds: track cost as invested principal
       const costIls = shares * price * fxRate;
       const feeShare = kidsShares > 0 ? feesIls * (shares / kidsShares) : 0;
-      d.principalByKid[kidId] = (d.principalByKid[kidId] || 0) + costIls + feeShare;
+      const cost = costIls + feeShare;
+      d.principalByKid[kidId] = (d.principalByKid[kidId] || 0) + cost;
+      d.totalKidsPrincipal += cost;
     }
     bumpShares(d.sharesByKidByTicker, kidId, tx.ticker, shares);
   }
@@ -212,6 +216,7 @@ export function deriveState(state, today = new Date()) {
     const totalProfit = pv - principal;
     d.profitByKid[kidId] = {
       total: totalProfit,
+      pct: principal > 0 ? (totalProfit / principal) * 100 : 0,
       unrealized: unrealizedProfit,
       realized: totalProfit - unrealizedProfit,
     };
@@ -219,6 +224,8 @@ export function deriveState(state, today = new Date()) {
     total += pv;
   }
   d.totalKidsValue = total;
+  d.totalProfit = d.totalKidsValue - d.totalKidsPrincipal;
+  d.totalReturnPct = d.totalKidsPrincipal > 0 ? (d.totalProfit / d.totalKidsPrincipal) * 100 : 0;
 
   // XIRR per kid: deposits + external BUYs as negative, today's PV as positive.
   const totalFlows = [];
