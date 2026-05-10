@@ -783,8 +783,8 @@ function kidCardHtml(kid) {
         <span class="px-3 py-1 rounded-lg ${kid.profitSign === 'pos' ? 'bg-emerald-400/10 text-emerald-400' : 'bg-red-400/10 text-red-400'} font-bold text-sm font-data-tabular">
           ${kid.profitSign === 'pos' ? '+' : ''}${escapeHtml(kid.profitFmt)} (${kid.profitSign === 'pos' ? '+' : ''}${kid.profitPct.toFixed(1)}%)
         </span>
-        <span class="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 ${xirrColor} text-xs font-data-tabular flex items-center gap-1">
-          <span class="material-symbols-outlined text-[13px]">${arrow}</span>${escapeHtml(kid.xirrFmt)}
+        <span class="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 ${xirrColor} text-xs font-data-tabular">
+          <span class="text-on-surface-variant/60 font-normal">שנתית </span>${escapeHtml(kid.xirrFmt)}
         </span>
       </div>
       <div class="flex flex-col gap-1 relative z-10 text-center mb-3">
