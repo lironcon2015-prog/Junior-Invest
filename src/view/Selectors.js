@@ -5,9 +5,9 @@ import { xirr } from '../math/Xirr.js';
 
 const ILS = new Intl.NumberFormat('he-IL', { style: 'currency', currency: 'ILS', maximumFractionDigits: 2 });
 const PCT = new Intl.NumberFormat('he-IL', { style: 'percent', maximumFractionDigits: 1 });
-const NUM = new Intl.NumberFormat('he-IL', { maximumFractionDigits: 4 });
+const NUM = new Intl.NumberFormat('he-IL', { maximumFractionDigits: 2 });
 
-const CURRENCY_SYMBOL = { USD: '$', EUR: '€', GBP: '£', 'ILS-Agorot': 'אג\'' };
+const CURRENCY_SYMBOL = { USD: '$', EUR: '€', GBP: '£', 'ILS-Agorot': '' };
 const currencySymbol = (c) => CURRENCY_SYMBOL[c] || c || '$';
 
 export const fmtIls = (n) => (n == null || isNaN(n) ? '—' : ILS.format(n));

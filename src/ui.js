@@ -487,7 +487,7 @@ export class UI {
         }
       }
 
-      const priceFmt = (p, c) => p != null ? `${({ USD: '$', EUR: '€', GBP: '£', 'ILS-Agorot': 'אג\'' }[c] || c)}${p.toFixed(2)}` : '—';
+      const priceFmt = (p, c) => p != null ? `${({ USD: '$', EUR: '€', GBP: '£', 'ILS-Agorot': '' }[c] || c)}${p.toFixed(2)}` : '—';
       return `
         <tr class="border-b border-white/5 hover:bg-white/[0.02]">
           <td class="py-3 pr-4 font-semibold text-white">${escapeHtml(lot.ticker)}</td>
