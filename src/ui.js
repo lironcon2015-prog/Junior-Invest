@@ -92,17 +92,19 @@ export class UI {
     if (!xirrEl) {
       xirrEl = document.createElement('div');
       xirrEl.id = 'hero-xirr';
-      xirrEl.className = 'mt-4 flex items-center justify-center gap-3 font-data-tabular tabular-nums';
+      xirrEl.className = 'mt-4 flex flex-wrap items-center justify-center gap-2 z-10 relative';
       $('#hero-fx')?.closest('div')?.after(xirrEl);
     }
     if (vm.totalKidsValue > 0) {
       const pSign = vm.totalProfit >= 0 ? 'pos' : 'neg';
-      const profitCls = pSign === 'pos' ? 'bg-emerald-400/10 text-emerald-400' : 'bg-red-400/10 text-red-400';
       const profitPrefix = pSign === 'pos' ? '+' : '';
-      const xirrColor = (vm.totalKidsXirr ?? 0) >= 0 ? 'text-on-surface-variant' : 'text-red-400';
-      xirrEl.innerHTML =
-        `<span class="px-3 py-1 rounded-lg ${profitCls} font-bold text-base">${profitPrefix}${escapeHtml(vm.totalProfitFmt)} (${profitPrefix}${vm.totalReturnPct.toFixed(1)}%)</span>` +
-        (vm.totalKidsXirr != null ? `<span class="px-3 py-1 rounded-lg bg-white/5 border border-white/10 ${xirrColor} text-sm">שנתית ${escapeHtml(vm.totalKidsXirrFmt)}</span>` : '');
+      const profitText = `${profitPrefix}${vm.totalProfitFmt} (${profitPrefix}${vm.totalReturnPct.toFixed(1)}%)`;
+      let html = pillHtml({ tone: pSign === 'pos' ? 'secondary' : 'red', text: profitText });
+      if (vm.totalKidsXirr != null) {
+        const xirrTone = (vm.totalKidsXirr ?? 0) >= 0 ? 'primary' : 'red';
+        html += pillHtml({ tone: xirrTone, text: `שנתית ${vm.totalKidsXirrFmt}` });
+      }
+      xirrEl.innerHTML = html;
     } else {
       xirrEl.innerHTML = '';
     }
@@ -769,24 +771,44 @@ function toast(msg) {
   setTimeout(() => t.remove(), 2000);
 }
 
+function pillHtml({ tone, text }) {
+  // tone: 'secondary' (emerald), 'primary' (violet), 'red'
+  let bg, border, dot, textColor, shadow;
+  if (tone === 'primary') {
+    bg = 'bg-primary/10'; border = 'border-primary/30'; dot = 'bg-primary'; textColor = 'text-primary';
+    shadow = '0 0 15px rgba(206,189,255,0.18)';
+  } else if (tone === 'red') {
+    bg = 'bg-red-400/10'; border = 'border-red-400/30'; dot = 'bg-red-400'; textColor = 'text-red-400';
+    shadow = '0 0 15px rgba(248,113,113,0.18)';
+  } else {
+    bg = 'bg-secondary/10'; border = 'border-secondary/30'; dot = 'bg-secondary'; textColor = 'text-secondary';
+    shadow = '0 0 15px rgba(69,223,164,0.15)';
+  }
+  return `<div class="flex items-center gap-2 px-4 py-2 rounded-full ${bg} border ${border}" style="box-shadow:${shadow};">
+    <span class="w-1.5 h-1.5 rounded-full ${dot} animate-pulse"></span>
+    <span class="${textColor} font-medium text-sm font-data-tabular tracking-wide">${escapeHtml(text)}</span>
+  </div>`;
+}
+
 function kidCardHtml(kid, index = 0) {
   const palette = [
-    { glow: 'rgba(206, 189, 255, 0.25)', glowHover: 'rgba(206, 189, 255, 0.4)', accent: 'text-primary', bar: '#cebdff' },
-    { glow: 'rgba(69, 223, 164, 0.25)', glowHover: 'rgba(69, 223, 164, 0.4)', accent: 'text-secondary', bar: '#45dfa4' },
-    { glow: 'rgba(249, 189, 34, 0.25)', glowHover: 'rgba(249, 189, 34, 0.4)', accent: 'text-tertiary', bar: '#f9bd22' },
+    { glow: 'rgba(206, 189, 255, 0.25)', accent: 'text-primary', bar: '#cebdff' },
+    { glow: 'rgba(69, 223, 164, 0.25)',  accent: 'text-secondary', bar: '#45dfa4' },
+    { glow: 'rgba(249, 189, 34, 0.25)',  accent: 'text-tertiary', bar: '#f9bd22' },
   ];
   const c = palette[index % palette.length];
 
-  const xirrColor =
-    kid.xirrSign === 'pos' ? 'text-secondary'
-    : kid.xirrSign === 'neg' ? 'text-red-400'
-    : 'text-on-surface-variant';
-
-  const profitCls = kid.profitSign === 'pos' ? 'text-secondary' : 'text-red-400';
-  const profitPrefix = kid.profitSign === 'pos' ? '+' : '';
-
   const rawPct = (typeof kid.profitPct === 'number' ? kid.profitPct : 0);
   const barPct = Math.max(8, Math.min(95, 40 + rawPct * 2));
+  const profitPrefix = kid.profitSign === 'pos' ? '+' : '';
+  const profitText = `${profitPrefix}${kid.profitFmt} (${profitPrefix}${rawPct.toFixed(1)}%)`;
+  const profitTone = kid.profitSign === 'pos' ? 'secondary' : 'red';
+
+  const xirrTone =
+    kid.xirrSign === 'pos' ? 'primary'
+    : kid.xirrSign === 'neg' ? 'red'
+    : 'primary';
+  const hasXirr = kid.xirrSign !== 'na';
 
   return `
     <div class="kid-card group flex flex-col gap-stack-md" data-kid-id="${escapeHtml(kid.id)}">
@@ -797,34 +819,27 @@ function kidCardHtml(kid, index = 0) {
           <div class="w-12 h-12 rounded-full bg-surface-container overflow-hidden border border-white/10 flex items-center justify-center">
             <span class="material-symbols-outlined ${c.accent}" style="font-size:22px;">person</span>
           </div>
-          <div>
-            <h3 class="font-headline-md text-headline-md text-white">${escapeHtml(kid.name)}</h3>
-            <p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
-              <span class="${profitCls} font-bold">${profitPrefix}${rawPct.toFixed(1)}%</span>
-            </p>
-          </div>
+          <h3 class="font-headline-md text-headline-md text-white">${escapeHtml(kid.name)}</h3>
         </div>
         <span class="material-symbols-outlined ${c.accent} group-hover:-translate-x-1 transition-transform rtl:rotate-180" style="font-size:20px;">arrow_forward</span>
       </div>
 
-      <div class="flex flex-col gap-stack-sm z-10 relative">
-        <div class="flex justify-between items-baseline">
-          <span class="font-body-md text-body-md text-on-surface-variant">יתרה</span>
-          <span class="font-headline-md text-headline-md text-white font-data-tabular tracking-tight">${escapeHtml(kid.portfolioValueFmt)}</span>
+      <div class="flex flex-col items-center text-center gap-2 z-10 relative">
+        <p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-[0.2em] font-bold">יתרה</p>
+        <h4 class="font-display-lg text-3xl text-white tracking-tight font-bold tabular-nums drop-shadow-[0_2px_10px_rgba(255,255,255,0.15)]">${escapeHtml(kid.portfolioValueFmt)}</h4>
+        <div class="flex flex-wrap items-center justify-center gap-2 mt-1">
+          ${pillHtml({ tone: profitTone, text: profitText })}
+          ${hasXirr ? pillHtml({ tone: xirrTone, text: `שנתית ${kid.xirrFmt}` }) : ''}
         </div>
-        <div class="kid-progress-track">
-          <div class="kid-progress-fill" style="width:${barPct}%; background:${c.bar};"></div>
-        </div>
-        <div class="flex justify-between items-center mt-2">
-          <div class="flex flex-col">
-            <span class="font-label-sm text-label-sm text-on-surface-variant uppercase">מזומן</span>
-            <span class="font-body-md text-body-md text-white font-data-tabular">${escapeHtml(kid.cashFmt)}</span>
-          </div>
-          <div class="flex flex-col text-left">
-            <span class="font-label-sm text-label-sm text-on-surface-variant uppercase">XIRR</span>
-            <span class="font-body-md text-body-md ${xirrColor} font-data-tabular">${escapeHtml(kid.xirrFmt)}</span>
-          </div>
-        </div>
+      </div>
+
+      <div class="kid-progress-track z-10 relative">
+        <div class="kid-progress-fill" style="width:${barPct}%; background:${c.bar};"></div>
+      </div>
+
+      <div class="flex justify-between items-center z-10 relative">
+        <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">מזומן</span>
+        <span class="font-body-md text-body-md text-white font-data-tabular">${escapeHtml(kid.cashFmt)}</span>
       </div>
     </div>
   `;
