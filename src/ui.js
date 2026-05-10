@@ -7,12 +7,14 @@ import {
   holdingsViewModel,
   ledgerViewModel,
   tickersViewModel,
+  fmtIls,
 } from './view/Selectors.js';
+import { xirr } from './math/Xirr.js';
 
 const $  = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
-const VIEWS = ['dashboard', 'holdings', 'ledger'];
+const VIEWS = ['dashboard', 'holdings', 'ledger', 'kid-portfolio'];
 
 export class UI {
   constructor(stateManager) {
@@ -77,6 +79,7 @@ export class UI {
     this._renderLedger(state);
     this._renderFormHelpers(state, derived);
     this._renderSettings(state);
+    this._renderKidPortfolio(state, derived);
   }
 
   _renderDashboard(state, derived) {
@@ -105,6 +108,13 @@ export class UI {
     grid.className = 'grid gap-6 mt-8 relative z-10 w-full max-w-5xl mx-auto';
     grid.style.gridTemplateColumns = `repeat(${Math.min(n, 3)}, minmax(0, 1fr))`;
     grid.innerHTML = vm.kids.map(kidCardHtml).join('');
+    $$('.kid-card', grid).forEach((card) => {
+      card.addEventListener('click', () => {
+        this.activeKidId = card.dataset.kidId;
+        this._showView('kid-portfolio');
+        this.renderAll();
+      });
+    });
   }
 
   _renderHoldings(state, derived) {
@@ -432,6 +442,106 @@ export class UI {
     $$('input[type="date"]').forEach((d) => this._setDefaultDate(d));
   }
 
+  _renderKidPortfolio(state, derived) {
+    if (this.activeView !== 'kid-portfolio') return;
+    const section = $('#view-kid-portfolio');
+    if (!section) return;
+    const kidId = this.activeKidId;
+    const kid = state.kids[kidId];
+    if (!kid) { section.innerHTML = ''; return; }
+
+    const profit = derived.profitByKid?.[kidId] || { total: 0, unrealized: 0, realized: 0 };
+    const pv = derived.portfolioValueByKid[kidId] || 0;
+    const fxRate = state.settings.lastFxRate;
+    const today = new Date();
+
+    const signCls = (n) => n > 0 ? 'text-emerald-400' : n < 0 ? 'text-red-400' : 'text-on-surface-variant';
+
+    const lots = (derived.lots || []).filter((lot) => (lot.remaining.kids[kidId] || 0) > 0);
+
+    const rows = lots.map((lot) => {
+      const shares = lot.remaining.kids[kidId];
+      const q = state.quotes[lot.ticker];
+      const qPrice = q?.price ?? q?.priceUsd ?? null;
+      const qCurrency = q?.currency ?? 'USD';
+      const currentRate = qCurrency === 'ILS-Agorot' ? 0.01 : fxRate;
+      const buyRate = lot.currency === 'ILS-Agorot' ? 0.01 : lot.fxAtBuy;
+      const costBasis = shares * lot.price * buyRate;
+      const currentVal = qPrice != null ? shares * qPrice * currentRate : null;
+      const lotProfit = currentVal != null ? currentVal - costBasis : null;
+      const pctChange = qPrice != null ? (qPrice - lot.price) / lot.price : null;
+
+      // Lot XIRR
+      let xirrVal = null;
+      if (qPrice != null && costBasis !== 0) {
+        const lotDk = String(lot.openDate).slice(0, 10);
+        const todDk = today.toISOString().slice(0, 10);
+        if (lotDk !== todDk) {
+          const res = xirr([{ date: lot.openDate, amount: -costBasis }, { date: today, amount: currentVal }]);
+          xirrVal = res?.value ?? null;
+        }
+      }
+
+      const priceFmt = (p, c) => p != null ? `${({ USD: '$', EUR: '€', GBP: '£', 'ILS-Agorot': '₪ag' }[c] || c)}${p.toFixed(2)}` : '—';
+      return `
+        <tr class="border-b border-white/5 hover:bg-white/[0.02]">
+          <td class="py-3 pr-4 font-semibold text-white">${escapeHtml(lot.ticker)}</td>
+          <td class="py-3 text-on-surface-variant text-xs">${escapeHtml(formatDateHe(lot.openDate))}</td>
+          <td class="py-3 font-data-tabular text-on-surface-variant">${escapeHtml(priceFmt(lot.price, lot.currency))}</td>
+          <td class="py-3 font-data-tabular text-on-surface-variant">${escapeHtml(priceFmt(qPrice, qCurrency))}</td>
+          <td class="py-3 font-data-tabular ${signCls(pctChange)}">${pctChange != null ? (pctChange * 100).toFixed(1) + '%' : '—'}</td>
+          <td class="py-3 font-data-tabular ${signCls(lotProfit)}">${lotProfit != null ? fmtIls(lotProfit) : '—'}</td>
+          <td class="py-3 font-data-tabular ${signCls(xirrVal)}">${xirrVal != null ? (xirrVal * 100).toFixed(1) + '%' : '—'}</td>
+        </tr>`;
+    }).join('');
+
+    section.innerHTML = `
+      <div class="glass-panel rounded-3xl p-8 md:p-10">
+        <div class="flex items-center gap-4 mb-8">
+          <button class="text-on-surface-variant hover:text-white transition-colors" id="kid-portfolio-back">
+            <span class="material-symbols-outlined">arrow_forward</span>
+          </button>
+          <h2 class="text-2xl font-bold text-on-background">${escapeHtml(kid.name)}</h2>
+          <span class="text-on-surface-variant text-sm">שווי נוכחי: <span class="text-white font-data-tabular">${fmtIls(pv)}</span></span>
+        </div>
+        <div class="grid grid-cols-3 gap-4 mb-8 text-center">
+          <div class="bg-white/[0.03] border border-white/5 rounded-2xl p-4">
+            <div class="text-xs text-on-surface-variant/60 uppercase tracking-wider mb-1">רווח כולל</div>
+            <div class="text-xl font-bold font-data-tabular ${signCls(profit.total)}">${fmtIls(profit.total)}</div>
+          </div>
+          <div class="bg-white/[0.03] border border-white/5 rounded-2xl p-4">
+            <div class="text-xs text-on-surface-variant/60 uppercase tracking-wider mb-1">רווח לא ממומש</div>
+            <div class="text-xl font-bold font-data-tabular ${signCls(profit.unrealized)}">${fmtIls(profit.unrealized)}</div>
+          </div>
+          <div class="bg-white/[0.03] border border-white/5 rounded-2xl p-4">
+            <div class="text-xs text-on-surface-variant/60 uppercase tracking-wider mb-1">רווח ממומש</div>
+            <div class="text-xl font-bold font-data-tabular ${signCls(profit.realized)}">${fmtIls(profit.realized)}</div>
+          </div>
+        </div>
+        ${lots.length ? `
+        <div class="overflow-x-auto">
+          <table class="w-full text-right border-collapse text-sm">
+            <thead>
+              <tr class="border-b border-white/10 font-label-caps text-[11px] text-on-surface-variant uppercase tracking-[0.15em]">
+                <th class="py-3 pr-4">נכס</th>
+                <th class="py-3">תאריך קנייה</th>
+                <th class="py-3">מחיר קנייה</th>
+                <th class="py-3">מחיר נוכחי</th>
+                <th class="py-3">שינוי %</th>
+                <th class="py-3">רווח (₪)</th>
+                <th class="py-3">תשואה שנתית</th>
+              </tr>
+            </thead>
+            <tbody class="font-data-tabular tabular-nums">${rows}</tbody>
+          </table>
+        </div>` : '<p class="text-on-surface-variant text-sm">אין אחזקות פתוחות</p>'}
+      </div>`;
+
+    $('#kid-portfolio-back')?.addEventListener('click', () => {
+      this._showView('dashboard');
+    });
+  }
+
   _setDefaultDate(input) {
     if (input && !input.value) input.value = new Date().toISOString().slice(0, 10);
   }
@@ -661,7 +771,7 @@ function kidCardHtml(kid) {
   const arrow = kid.xirrSign === 'neg' ? 'trending_down' : 'trending_up';
 
   return `
-    <div class="kid-card w-full relative overflow-hidden flex flex-col justify-center items-center p-8">
+    <div class="kid-card w-full relative overflow-hidden flex flex-col justify-center items-center p-8 cursor-pointer" data-kid-id="${escapeHtml(kid.id)}">
       <div class="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none rounded-3xl"></div>
       <h3 class="font-headline-md text-2xl font-bold text-on-background tracking-wide mb-3 relative z-10">${escapeHtml(kid.name)}</h3>
       <div class="xirr-badge px-4 py-1.5 rounded-full bg-black/30 backdrop-blur-md text-sm font-data-tabular font-bold ${xirrColor} flex items-center gap-1 mb-5 relative z-10 border border-white/10">

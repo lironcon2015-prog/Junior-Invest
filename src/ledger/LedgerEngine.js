@@ -40,6 +40,8 @@ function emptyDerived(kids) {
     parentSharesByTicker: {},
     lots: [],
     portfolioValueByKid: {},
+    principalByKid: {},
+    profitByKid: {},
     totalKidsValue: 0,
     xirrByKid: {},
     totalKidsXirr: 0,
@@ -64,6 +66,7 @@ function applyDeposit(d, tx) {
   if (!(tx.kidId in d.cashByKid)) throw new Error(`DEPOSIT: unknown kidId "${tx.kidId}"`);
   if (!(tx.amountIls > 0)) throw new Error('DEPOSIT: amount must be > 0');
   d.cashByKid[tx.kidId] += tx.amountIls;
+  d.principalByKid[tx.kidId] = (d.principalByKid[tx.kidId] || 0) + tx.amountIls;
 }
 
 function applyBuy(d, tx) {
@@ -97,6 +100,11 @@ function applyBuy(d, tx) {
           message: `Cash went negative for ${kidId} after BUY ${tx.ticker}`,
         });
       }
+    } else {
+      // External funds: track cost as invested principal
+      const costIls = shares * price * fxRate;
+      const feeShare = kidsShares > 0 ? feesIls * (shares / kidsShares) : 0;
+      d.principalByKid[kidId] = (d.principalByKid[kidId] || 0) + costIls + feeShare;
     }
     bumpShares(d.sharesByKidByTicker, kidId, tx.ticker, shares);
   }
@@ -185,6 +193,29 @@ export function deriveState(state, today = new Date()) {
       }
     }
     d.portfolioValueByKid[kidId] = pv;
+
+    // Profit breakdown per kid
+    const principal = d.principalByKid[kidId] || 0;
+    let unrealizedProfit = 0;
+    for (const lot of d.lots) {
+      const kidShares = lot.remaining.kids[kidId] || 0;
+      if (kidShares <= 0) continue;
+      const q = quotes[lot.ticker];
+      const qPrice = q?.price ?? q?.priceUsd;
+      const qCurrency = q?.currency ?? 'USD';
+      if (q && typeof qPrice === 'number') {
+        const currentRate = qCurrency === 'ILS-Agorot' ? 0.01 : fxRate;
+        const buyRate = lot.currency === 'ILS-Agorot' ? 0.01 : lot.fxAtBuy;
+        unrealizedProfit += kidShares * (qPrice * currentRate - lot.price * buyRate);
+      }
+    }
+    const totalProfit = pv - principal;
+    d.profitByKid[kidId] = {
+      total: totalProfit,
+      unrealized: unrealizedProfit,
+      realized: totalProfit - unrealizedProfit,
+    };
+
     total += pv;
   }
   d.totalKidsValue = total;
