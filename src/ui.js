@@ -92,12 +92,17 @@ export class UI {
     if (!xirrEl) {
       xirrEl = document.createElement('div');
       xirrEl.id = 'hero-xirr';
-      xirrEl.className = 'mt-3 text-sm font-data-tabular tabular-nums';
+      xirrEl.className = 'mt-4 flex items-center justify-center gap-3 font-data-tabular tabular-nums';
       $('#hero-fx')?.closest('div')?.after(xirrEl);
     }
-    if (vm.totalKidsValue > 0 && vm.totalKidsXirr != null) {
-      const xirrColor = vm.totalKidsXirr >= 0 ? 'text-emerald-400' : 'text-red-400';
-      xirrEl.innerHTML = `<span class="text-on-surface-variant/70 text-xs">תשואה כוללת (XIRR): </span><span class="font-bold ${xirrColor}">${escapeHtml(vm.totalKidsXirrFmt)}</span>`;
+    if (vm.totalKidsValue > 0) {
+      const pSign = vm.totalProfit >= 0 ? 'pos' : 'neg';
+      const profitCls = pSign === 'pos' ? 'bg-emerald-400/10 text-emerald-400' : 'bg-red-400/10 text-red-400';
+      const profitPrefix = pSign === 'pos' ? '+' : '';
+      const xirrColor = (vm.totalKidsXirr ?? 0) >= 0 ? 'text-on-surface-variant' : 'text-red-400';
+      xirrEl.innerHTML =
+        `<span class="px-3 py-1 rounded-lg ${profitCls} font-bold text-base">${profitPrefix}${escapeHtml(vm.totalProfitFmt)} (${profitPrefix}${vm.totalReturnPct.toFixed(1)}%)</span>` +
+        (vm.totalKidsXirr != null ? `<span class="px-3 py-1 rounded-lg bg-white/5 border border-white/10 ${xirrColor} text-sm">שנתית ${escapeHtml(vm.totalKidsXirrFmt)}</span>` : '');
     } else {
       xirrEl.innerHTML = '';
     }
@@ -774,9 +779,13 @@ function kidCardHtml(kid) {
     <div class="kid-card w-full relative overflow-hidden flex flex-col justify-center items-center p-8 cursor-pointer" data-kid-id="${escapeHtml(kid.id)}">
       <div class="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none rounded-3xl"></div>
       <h3 class="font-headline-md text-2xl font-bold text-on-background tracking-wide mb-3 relative z-10">${escapeHtml(kid.name)}</h3>
-      <div class="xirr-badge px-4 py-1.5 rounded-full bg-black/30 backdrop-blur-md text-sm font-data-tabular font-bold ${xirrColor} flex items-center gap-1 mb-5 relative z-10 border border-white/10">
-        <span class="material-symbols-outlined text-[16px]">${arrow}</span>
-        ${escapeHtml(kid.xirrFmt)}
+      <div class="flex items-center gap-2 mb-5 relative z-10">
+        <span class="px-3 py-1 rounded-lg ${kid.profitSign === 'pos' ? 'bg-emerald-400/10 text-emerald-400' : 'bg-red-400/10 text-red-400'} font-bold text-sm font-data-tabular">
+          ${kid.profitSign === 'pos' ? '+' : ''}${escapeHtml(kid.profitFmt)} (${kid.profitSign === 'pos' ? '+' : ''}${kid.profitPct.toFixed(1)}%)
+        </span>
+        <span class="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 ${xirrColor} text-xs font-data-tabular flex items-center gap-1">
+          <span class="material-symbols-outlined text-[13px]">${arrow}</span>${escapeHtml(kid.xirrFmt)}
+        </span>
       </div>
       <div class="flex flex-col gap-1 relative z-10 text-center mb-3">
         <span class="font-label-caps text-[11px] text-on-surface-variant/60 uppercase tracking-[0.2em] font-bold">שווי נוכחי</span>
