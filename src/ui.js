@@ -112,7 +112,7 @@ export class UI {
     // Use inline style — Tailwind CDN doesn't scan JS strings for dynamic classes
     grid.className = 'grid gap-6 mt-8 relative z-10 w-full max-w-5xl mx-auto';
     grid.style.gridTemplateColumns = `repeat(${Math.min(n, 3)}, minmax(0, 1fr))`;
-    grid.innerHTML = vm.kids.map(kidCardHtml).join('');
+    grid.innerHTML = vm.kids.map((kid, i) => kidCardHtml(kid, i)).join('');
     $$('.kid-card', grid).forEach((card) => {
       card.addEventListener('click', () => {
         this.activeKidId = card.dataset.kidId;
@@ -769,32 +769,62 @@ function toast(msg) {
   setTimeout(() => t.remove(), 2000);
 }
 
-function kidCardHtml(kid) {
+function kidCardHtml(kid, index = 0) {
+  const palette = [
+    { glow: 'rgba(206, 189, 255, 0.25)', glowHover: 'rgba(206, 189, 255, 0.4)', accent: 'text-primary', bar: '#cebdff' },
+    { glow: 'rgba(69, 223, 164, 0.25)', glowHover: 'rgba(69, 223, 164, 0.4)', accent: 'text-secondary', bar: '#45dfa4' },
+    { glow: 'rgba(249, 189, 34, 0.25)', glowHover: 'rgba(249, 189, 34, 0.4)', accent: 'text-tertiary', bar: '#f9bd22' },
+  ];
+  const c = palette[index % palette.length];
+
   const xirrColor =
     kid.xirrSign === 'pos' ? 'text-secondary'
     : kid.xirrSign === 'neg' ? 'text-red-400'
     : 'text-on-surface-variant';
-  const arrow = kid.xirrSign === 'neg' ? 'trending_down' : 'trending_up';
+
+  const profitCls = kid.profitSign === 'pos' ? 'text-secondary' : 'text-red-400';
+  const profitPrefix = kid.profitSign === 'pos' ? '+' : '';
+
+  const rawPct = (typeof kid.profitPct === 'number' ? kid.profitPct : 0);
+  const barPct = Math.max(8, Math.min(95, 40 + rawPct * 2));
 
   return `
-    <div class="kid-card w-full relative overflow-hidden flex flex-col justify-center items-center p-8 cursor-pointer" data-kid-id="${escapeHtml(kid.id)}">
-      <div class="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none rounded-3xl"></div>
-      <h3 class="font-headline-md text-2xl font-bold text-on-background tracking-wide mb-3 relative z-10">${escapeHtml(kid.name)}</h3>
-      <div class="flex items-center gap-2 mb-5 relative z-10">
-        <span class="px-3 py-1 rounded-lg ${kid.profitSign === 'pos' ? 'bg-emerald-400/10 text-emerald-400' : 'bg-red-400/10 text-red-400'} font-bold text-sm font-data-tabular">
-          ${kid.profitSign === 'pos' ? '+' : ''}${escapeHtml(kid.profitFmt)} (${kid.profitSign === 'pos' ? '+' : ''}${kid.profitPct.toFixed(1)}%)
-        </span>
-        <span class="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 ${xirrColor} text-xs font-data-tabular">
-          <span class="text-on-surface-variant/60 font-normal">שנתית </span>${escapeHtml(kid.xirrFmt)}
-        </span>
+    <div class="kid-card group flex flex-col gap-stack-md" data-kid-id="${escapeHtml(kid.id)}">
+      <div class="kid-glow" style="background: ${c.glow};"></div>
+
+      <div class="flex justify-between items-start z-10 relative">
+        <div class="flex items-center gap-stack-sm">
+          <div class="w-12 h-12 rounded-full bg-surface-container overflow-hidden border border-white/10 flex items-center justify-center">
+            <span class="material-symbols-outlined ${c.accent}" style="font-size:22px;">person</span>
+          </div>
+          <div>
+            <h3 class="font-headline-md text-headline-md text-white">${escapeHtml(kid.name)}</h3>
+            <p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
+              <span class="${profitCls} font-bold">${profitPrefix}${rawPct.toFixed(1)}%</span>
+            </p>
+          </div>
+        </div>
+        <span class="material-symbols-outlined ${c.accent} group-hover:-translate-x-1 transition-transform rtl:rotate-180" style="font-size:20px;">arrow_forward</span>
       </div>
-      <div class="flex flex-col gap-1 relative z-10 text-center mb-3">
-        <span class="font-label-caps text-[11px] text-on-surface-variant/60 uppercase tracking-[0.2em] font-bold">שווי נוכחי</span>
-        <span class="font-data-tabular text-3xl font-bold text-on-background tracking-tight">${escapeHtml(kid.portfolioValueFmt)}</span>
-      </div>
-      <div class="flex items-center gap-2 relative z-10 text-xs text-on-surface-variant/50">
-        <span>מזומן:</span>
-        <span class="font-data-tabular text-on-surface-variant">${escapeHtml(kid.cashFmt)}</span>
+
+      <div class="flex flex-col gap-stack-sm z-10 relative">
+        <div class="flex justify-between items-baseline">
+          <span class="font-body-md text-body-md text-on-surface-variant">יתרה</span>
+          <span class="font-headline-md text-headline-md text-white font-data-tabular tracking-tight">${escapeHtml(kid.portfolioValueFmt)}</span>
+        </div>
+        <div class="kid-progress-track">
+          <div class="kid-progress-fill" style="width:${barPct}%; background:${c.bar};"></div>
+        </div>
+        <div class="flex justify-between items-center mt-2">
+          <div class="flex flex-col">
+            <span class="font-label-sm text-label-sm text-on-surface-variant uppercase">מזומן</span>
+            <span class="font-body-md text-body-md text-white font-data-tabular">${escapeHtml(kid.cashFmt)}</span>
+          </div>
+          <div class="flex flex-col text-left">
+            <span class="font-label-sm text-label-sm text-on-surface-variant uppercase">XIRR</span>
+            <span class="font-body-md text-body-md ${xirrColor} font-data-tabular">${escapeHtml(kid.xirrFmt)}</span>
+          </div>
+        </div>
       </div>
     </div>
   `;
