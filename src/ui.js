@@ -20,6 +20,7 @@ export class UI {
   constructor(stateManager) {
     this.sm = stateManager;
     this.activeView = 'dashboard';
+    this.isTotalMode = false;
   }
 
   init() {
@@ -28,6 +29,12 @@ export class UI {
     this._bindSettings();
     this._bindIO();
     this._bindEditDialog();
+    document.getElementById('btn-hero-total')?.addEventListener('click', () => {
+      this.isTotalMode = true;
+      this.activeKidId = null;
+      this._showView('kid-portfolio');
+      this.renderAll();
+    });
     this.sm.on('state:changed', () => this.renderAll());
     this.renderAll();
     this._showView(this.activeView);
@@ -117,6 +124,7 @@ export class UI {
     grid.innerHTML = vm.kids.map((kid, i) => kidCardHtml(kid, i)).join('');
     $$('.kid-card', grid).forEach((card) => {
       card.addEventListener('click', () => {
+        this.isTotalMode = false;
         this.activeKidId = card.dataset.kidId;
         this._showView('kid-portfolio');
         this.renderAll();
@@ -453,21 +461,45 @@ export class UI {
     if (this.activeView !== 'kid-portfolio') return;
     const section = $('#view-kid-portfolio');
     if (!section) return;
-    const kidId = this.activeKidId;
-    const kid = state.kids[kidId];
-    if (!kid) { section.innerHTML = ''; return; }
 
-    const profit = derived.profitByKid?.[kidId] || { total: 0, unrealized: 0, realized: 0 };
-    const pv = derived.portfolioValueByKid[kidId] || 0;
     const fxRate = state.settings.lastFxRate;
     const today = new Date();
-
     const signCls = (n) => n > 0 ? 'text-emerald-400' : n < 0 ? 'text-red-400' : 'text-on-surface-variant';
+    const priceFmt = (p, c) => {
+      const sym = { USD: '$', EUR: '€', GBP: '£', 'ILS-Agorot': '' };
+      return p != null ? `${c in sym ? sym[c] : (c || '')}${p.toFixed(2)}` : '—';
+    };
 
-    const lots = (derived.lots || []).filter((lot) => (lot.remaining.kids[kidId] || 0) > 0);
+    let displayName, avatarIcon, pv, profit, lots;
+
+    if (this.isTotalMode) {
+      displayName = 'התיק הכללי';
+      avatarIcon = 'account_balance_wallet';
+      pv = Object.values(derived.portfolioValueByKid).reduce((a, b) => a + b, 0);
+      profit = { total: 0, unrealized: 0, realized: 0 };
+      for (const p of Object.values(derived.profitByKid || {})) {
+        profit.total += p.total || 0;
+        profit.unrealized += p.unrealized || 0;
+        profit.realized += p.realized || 0;
+      }
+      lots = (derived.lots || []).filter((lot) =>
+        Object.values(lot.remaining?.kids || {}).some((v) => v > 0)
+      );
+    } else {
+      const kidId = this.activeKidId;
+      const kid = state.kids[kidId];
+      if (!kid) { section.innerHTML = ''; return; }
+      displayName = kid.name;
+      avatarIcon = 'person';
+      pv = derived.portfolioValueByKid[kidId] || 0;
+      profit = derived.profitByKid?.[kidId] || { total: 0, unrealized: 0, realized: 0 };
+      lots = (derived.lots || []).filter((lot) => (lot.remaining.kids[kidId] || 0) > 0);
+    }
 
     const rows = lots.map((lot) => {
-      const shares = lot.remaining.kids[kidId];
+      const shares = this.isTotalMode
+        ? Object.values(lot.remaining?.kids || {}).reduce((a, b) => a + b, 0)
+        : lot.remaining.kids[this.activeKidId];
       const q = state.quotes[lot.ticker];
       const qPrice = q?.price ?? q?.priceUsd ?? null;
       const qCurrency = q?.currency ?? 'USD';
@@ -478,7 +510,6 @@ export class UI {
       const lotProfit = currentVal != null ? currentVal - costBasis : null;
       const pctChange = qPrice != null ? (qPrice - lot.price) / lot.price : null;
 
-      // Lot XIRR
       let xirrVal = null;
       if (qPrice != null && costBasis !== 0) {
         const lotDk = String(lot.openDate).slice(0, 10);
@@ -489,7 +520,6 @@ export class UI {
         }
       }
 
-      const priceFmt = (p, c) => { const sym = { USD: '$', EUR: '€', GBP: '£', 'ILS-Agorot': '' }; return p != null ? `${c in sym ? sym[c] : (c || '')}${p.toFixed(2)}` : '—'; };
       return `
         <tr class="border-b border-white/5 hover:bg-white/[0.02]">
           <td class="py-3 pr-4 font-semibold text-white">${escapeHtml(lot.ticker)}</td>
@@ -508,7 +538,10 @@ export class UI {
           <button class="text-on-surface-variant hover:text-white transition-colors" id="kid-portfolio-back">
             <span class="material-symbols-outlined">arrow_forward</span>
           </button>
-          <h2 class="text-2xl font-bold text-on-background">${escapeHtml(kid.name)}</h2>
+          <div class="w-12 h-12 rounded-full bg-surface-container overflow-hidden border border-white/10 flex items-center justify-center">
+            <span class="material-symbols-outlined text-primary" style="font-size:22px;">${escapeHtml(avatarIcon)}</span>
+          </div>
+          <h2 class="text-2xl font-bold text-on-background">${escapeHtml(displayName)}</h2>
           <span class="text-on-surface-variant text-sm">שווי נוכחי: <span class="text-white font-data-tabular">${fmtIls(pv)}</span></span>
         </div>
         <div class="grid grid-cols-3 gap-4 mb-8 text-center">
@@ -545,6 +578,7 @@ export class UI {
       </div>`;
 
     $('#kid-portfolio-back')?.addEventListener('click', () => {
+      this.isTotalMode = false;
       this._showView('dashboard');
     });
   }
