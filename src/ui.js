@@ -746,14 +746,17 @@ export class UI {
       quoteBox.insertAdjacentHTML('beforebegin', `<button id="btn-fetch-quotes" class="bg-primary/20 text-primary px-4 py-2 rounded-xl text-sm font-semibold hover:bg-primary/30 transition-colors mb-4 flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">sync</span> רענן שערים (Yahoo)</button>`);
       $('#btn-fetch-quotes').addEventListener('click', async () => {
         const state = this.sm.getState();
-        const tickers = Object.keys(state.quotes || {});
+        const derived = this.sm.getDerived();
+        const activeTickers = derived.lots.map((l) => l.ticker);
+        const tickers = [...new Set([...Object.keys(state.quotes || {}), ...activeTickers])];
         if (!tickers.length) return toast('אין מניות לעדכון');
         toast('מושך נתונים מ-Yahoo...');
         const newPrices = await fetchQuotes(tickers);
-        for (const t of Object.keys(newPrices)) {
-          const q = state.quotes[t];
-          this.sm.upsertQuote({ ticker: t, company: q.company, price: newPrices[t], currency: q.currency, asOf: new Date().toISOString().slice(0, 10), source: 'api' });
-        }
+        Object.keys(newPrices).forEach((t) => {
+          const q = state.quotes[t] || {};
+          const currency = q.currency || (t.endsWith('.TA') || /^\d+(\.TA)?$/.test(t) ? 'ILS-Agorot' : 'USD');
+          this.sm.upsertQuote({ ticker: t, company: q.company || t, price: newPrices[t], currency, asOf: new Date().toISOString().slice(0, 10), source: 'api' });
+        });
         toast('שערים עודכנו בהצלחה');
         this.renderAll();
       });
