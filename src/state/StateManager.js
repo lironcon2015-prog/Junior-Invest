@@ -103,6 +103,13 @@ export class StateManager {
     this._commit();
   }
 
+  removeQuote(ticker) {
+    if (this.state.quotes[ticker]) {
+      delete this.state.quotes[ticker];
+      this._commit();
+    }
+  }
+
   // ---- Ledger ---------------------------------------------------------
 
   _appendTx(tx) {

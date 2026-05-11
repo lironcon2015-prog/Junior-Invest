@@ -336,6 +336,7 @@ export class UI {
                    data-quote="${q.ticker}"
                    class="bg-transparent text-white font-data-tabular w-28 text-left outline-none focus:text-primary" />
             <span class="text-xs text-on-surface-variant w-16 inline-block text-left">${escapeHtml(q.currency === 'ILS-Agorot' ? 'אג\'' : (q.currency || 'USD'))}</span>
+            <button data-rm-quote="${escapeHtml(q.ticker)}" class="text-on-surface-variant hover:text-primary text-xs ml-3 mr-2">הסר</button>
           </div>`).join('')
         : '<p class="text-sm text-on-surface-variant">לא נשמרו ציטוטים. ייווצרו אוטומטית בעת קנייה ראשונה.</p>';
 
@@ -351,6 +352,11 @@ export class UI {
             asOf: new Date().toISOString().slice(0, 10),
             source: 'manual',
           });
+        }));
+
+      $$('[data-rm-quote]', quoteBox).forEach((btn) =>
+        btn.addEventListener('click', () => {
+          if (confirm('להסיר ציטוט?')) this.sm.removeQuote(btn.dataset.rmQuote);
         }));
     }
   }
@@ -749,10 +755,12 @@ export class UI {
         const derived = this.sm.getDerived();
         const activeTickers = derived.lots.map((l) => l.ticker);
         const tickers = [...new Set([...Object.keys(state.quotes || {}), ...activeTickers])];
+        if (!tickers.includes('ILS=X')) tickers.push('ILS=X');
         if (!tickers.length) return toast('אין מניות לעדכון');
         toast('מושך נתונים מ-Yahoo...');
         const newPrices = await fetchQuotes(tickers);
         Object.keys(newPrices).forEach((t) => {
+          if (t === 'ILS=X') { this.sm.setFxRate(newPrices[t]); return; }
           const q = state.quotes[t] || {};
           const currency = q.currency || (t.endsWith('.TA') || /^\d+(\.TA)?$/.test(t) ? 'ILS-Agorot' : 'USD');
           this.sm.upsertQuote({ ticker: t, company: q.company || t, price: newPrices[t], currency, asOf: new Date().toISOString().slice(0, 10), source: 'api' });
