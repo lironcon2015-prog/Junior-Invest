@@ -156,7 +156,7 @@ export class UI {
                 <span class="material-symbols-outlined text-on-surface-variant text-base">show_chart</span>
               </div>
               <div>
-                <div class="font-semibold text-white"><span class="ticker-font">${escapeHtml(r.ticker)}</span></div>
+                <div class="font-semibold text-white"><span class="ticker-font whitespace-nowrap inline-block text-left" dir="ltr">${escapeHtml(r.ticker)}</span></div>
                 <div class="text-xs text-on-surface-variant">${escapeHtml(r.company)}</div>
               </div>
             </div>
@@ -235,7 +235,7 @@ export class UI {
             ${escapeHtml(r.label)}
           </span>
         </td>
-        <td class="py-4 text-on-background font-medium"><span class="ticker-font">${escapeHtml(r.who)}</span></td>
+        <td class="py-4 text-on-background font-medium"><span class="ticker-font whitespace-nowrap inline-block text-left" dir="ltr">${escapeHtml(r.who)}</span></td>
         <td class="py-4 text-on-surface-variant text-xs">${escapeHtml(r.details)}</td>
         <td class="py-4 text-left">
           <span class="font-data-tabular ${r.sign === 'pos' ? 'text-secondary' : 'text-on-background'}">${escapeHtml(r.amountFmt)}</span>
@@ -329,7 +329,7 @@ export class UI {
         ? tickers.map((q) => `
           <div class="flex items-center gap-3 bg-white/[0.03] border border-white/5 rounded-xl px-4 py-3">
             <div class="flex-1">
-              <div class="text-white font-semibold"><span class="ticker-font">${escapeHtml(q.ticker)}</span></div>
+              <div class="text-white font-semibold"><span class="ticker-font whitespace-nowrap inline-block text-left" dir="ltr">${escapeHtml(q.ticker)}</span></div>
               <div class="text-xs text-on-surface-variant">${escapeHtml(q.company)} · ${escapeHtml(formatDateHe(q.asOf))}</div>
             </div>
             <input type="number" step="0.01" min="0" value="${q.price ?? q.priceUsd}"
@@ -529,7 +529,7 @@ export class UI {
 
       return `
         <tr class="border-b border-white/5 hover:bg-white/[0.02]">
-          <td class="py-3 pr-4 font-semibold text-white"><span class="ticker-font">${escapeHtml(lot.ticker)}</span></td>
+          <td class="py-3 pr-4 font-semibold text-white"><span class="ticker-font whitespace-nowrap inline-block text-left" dir="ltr">${escapeHtml(lot.ticker)}</span></td>
           <td class="py-3 text-on-surface-variant text-xs">${escapeHtml(formatDateHe(lot.openDate))}</td>
           <td class="py-3 font-data-tabular text-on-surface-variant">${escapeHtml(priceFmt(lot.price, lot.currency))}</td>
           <td class="py-3 font-data-tabular text-on-surface-variant">${escapeHtml(priceFmt(qPrice, qCurrency))}</td>
