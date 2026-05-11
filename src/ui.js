@@ -10,6 +10,7 @@ import {
   fmtIls,
 } from './view/Selectors.js';
 import { xirr } from './math/Xirr.js';
+import { fetchQuotes } from './io/QuoteFetcher.js';
 
 const $  = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
@@ -740,6 +741,24 @@ export class UI {
   }
 
   _bindSettings() {
+    const quoteBox = $('#settings-quotes');
+    if (quoteBox) {
+      quoteBox.insertAdjacentHTML('beforebegin', `<button id="btn-fetch-quotes" class="bg-primary/20 text-primary px-4 py-2 rounded-xl text-sm font-semibold hover:bg-primary/30 transition-colors mb-4 flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">sync</span> רענן שערים (Yahoo)</button>`);
+      $('#btn-fetch-quotes').addEventListener('click', async () => {
+        const state = this.sm.getState();
+        const tickers = Object.keys(state.quotes || {});
+        if (!tickers.length) return toast('אין מניות לעדכון');
+        toast('מושך נתונים מ-Yahoo...');
+        const newPrices = await fetchQuotes(tickers);
+        for (const t of Object.keys(newPrices)) {
+          const q = state.quotes[t];
+          this.sm.upsertQuote({ ticker: t, company: q.company, price: newPrices[t], currency: q.currency, asOf: new Date().toISOString().slice(0, 10), source: 'api' });
+        }
+        toast('שערים עודכנו בהצלחה');
+        this.renderAll();
+      });
+    }
+
     $('#btn-add-kid').addEventListener('click', () => {
       const name = prompt('שם הילד/ה החדש/ה');
       if (name && name.trim()) {
