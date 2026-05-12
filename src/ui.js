@@ -791,7 +791,6 @@ export class UI {
           if (btn) btn.disabled = false;
         }
       });
-      });
     }
 
     $('#btn-add-kid').addEventListener('click', () => {
