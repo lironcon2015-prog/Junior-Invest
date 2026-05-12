@@ -757,15 +757,33 @@ export class UI {
         const tickers = [...new Set([...Object.keys(state.quotes || {}), ...activeTickers])];
         if (!tickers.includes('ILS=X')) tickers.push('ILS=X');
         if (!tickers.length) return toast('אין מניות לעדכון');
-        toast('מושך נתונים מ-Yahoo...');
+
+        const btn = $('#btn-fetch-quotes');
+        if (btn) btn.disabled = true;
+        toast(`מושך נתונים עבור ${tickers.length} טיקרים...`);
+
         const newPrices = await fetchQuotes(tickers);
+        const stockTickers = tickers.filter((t) => t !== 'ILS=X');
+        const succeeded = [];
+        const failed = [];
+
         Object.keys(newPrices).forEach((t) => {
           if (t === 'ILS=X') { this.sm.setFxRate(newPrices[t]); return; }
           const q = state.quotes[t] || {};
           const currency = q.currency || (t.endsWith('.TA') || /^\d+(\.TA)?$/.test(t) ? 'ILS-Agorot' : 'USD');
           this.sm.upsertQuote({ ticker: t, company: q.company || t, price: newPrices[t], currency, asOf: new Date().toISOString().slice(0, 10), source: 'api' });
+          succeeded.push(t);
         });
-        toast('שערים עודכנו בהצלחה');
+
+        stockTickers.forEach((t) => { if (!newPrices[t]) failed.push(t); });
+
+        const fxLine = newPrices['ILS=X'] ? ` · USD/ILS ${newPrices['ILS=X'].toFixed(3)}` : '';
+        const summary = `✓ ${succeeded.length}/${stockTickers.length} עודכנו${fxLine}` +
+          (failed.length ? `\n✗ נכשלו: ${failed.join(', ')}` : '');
+        toast(summary);
+        console.log('[QuoteFetch] succeeded:', succeeded, '| failed:', failed, '| raw:', newPrices);
+
+        if (btn) btn.disabled = false;
         this.renderAll();
       });
     }

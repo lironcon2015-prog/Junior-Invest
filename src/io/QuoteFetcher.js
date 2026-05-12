@@ -28,8 +28,10 @@ export async function getQuote(ticker) {
             const res = await fetch(proxy);
             if (!res.ok) throw new Error('Proxy error');
             const data = await res.json();
-            const yahooData = JSON.parse(data.contents);
-            return yahooData.chart.result[0].meta.regularMarketPrice;
+            const contents = data.contents;
+            const yahooData = typeof contents === 'string' ? JSON.parse(contents) : contents;
+            const price = yahooData?.chart?.result?.[0]?.meta?.regularMarketPrice;
+            if (typeof price === 'number') return price;
         } catch(e) {
             console.warn('Yahoo fetch failed', e);
         }
