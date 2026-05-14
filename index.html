@@ -625,6 +625,10 @@
   </ul>
 
   <div class="mt-auto pt-stack-md border-t-[0.5px] border-white/10 flex flex-col gap-stack-sm">
+    <button id="btn-fetch-quotes-side" class="w-full text-primary hover:text-white py-3 rounded-lg flex items-center justify-center gap-2 border border-primary/30 bg-primary/10 hover:bg-primary/20 transition disabled:opacity-60 disabled:cursor-wait">
+      <span class="material-symbols-outlined btn-sync-icon" style="font-size:18px;">sync</span>
+      רענן שערים
+    </button>
     <button id="btn-export" class="w-full py-3 rounded-lg font-semibold neon-button flex items-center justify-center gap-2">
       <span class="material-symbols-outlined" style="font-size:18px;">download</span>
       ייצוא JSON
@@ -652,6 +656,7 @@
       <button data-nav="dashboard" class="p-2 text-primary transition-colors drop-shadow-[0_0_8px_rgba(206,189,255,0.8)]" aria-label="לוח בקרה"><span class="material-symbols-outlined fill">dashboard</span></button>
       <button data-nav="holdings" class="p-2 text-on-surface-variant hover:text-on-surface transition-colors" aria-label="אחזקות"><span class="material-symbols-outlined">account_balance_wallet</span></button>
       <button data-nav="ledger" class="p-2 text-on-surface-variant hover:text-on-surface transition-colors" aria-label="יומן"><span class="material-symbols-outlined">receipt_long</span></button>
+      <button id="btn-fetch-quotes-mobile" class="p-2 text-primary hover:text-white transition-colors disabled:opacity-60 disabled:cursor-wait" aria-label="רענן שערים"><span class="material-symbols-outlined btn-sync-icon">sync</span></button>
       <button id="btn-export-mobile" class="p-2 text-on-surface-variant hover:text-primary transition-colors" aria-label="ייצוא"><span class="material-symbols-outlined">download</span></button>
       <button id="btn-import-mobile" class="p-2 text-on-surface-variant hover:text-primary transition-colors" aria-label="ייבוא"><span class="material-symbols-outlined">upload</span></button>
     </div>
@@ -676,15 +681,6 @@
           <p id="hero-fx" class="font-body-md text-sm md:text-base font-medium text-secondary tracking-wide">—</p>
         </div>
       </div>
-    </div>
-
-    <!-- Quick-action: refresh quotes from Yahoo without leaving the dashboard -->
-    <div class="w-full flex justify-center relative z-20">
-      <button id="btn-fetch-quotes-hero" type="button"
-        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary/20 hover:bg-primary/30 border border-primary/40 hover:border-primary/60 text-primary hover:text-white font-semibold text-sm transition-all shadow-[0_0_20px_rgba(206,189,255,0.25)] hover:shadow-[0_0_28px_rgba(206,189,255,0.4)] disabled:opacity-60 disabled:cursor-wait">
-        <span class="material-symbols-outlined text-[18px] btn-sync-icon">sync</span>
-        רענן שערים מ-Yahoo
-      </button>
     </div>
 
     <!-- Kids Grid (Bento Style) -->
