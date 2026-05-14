@@ -1,0 +1,14 @@
+{
+  "name": "הון ג'וניור",
+  "short_name": "הון ג'וניור",
+  "description": "תיק השקעות לילדים בחשבון אחד עם הקצאה לפי אחוזים",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0F0C13",
+  "theme_color": "#151219",
+  "lang": "he",
+  "dir": "rtl",
+  "icons": []
+}
