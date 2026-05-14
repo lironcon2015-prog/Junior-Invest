@@ -11,7 +11,38 @@
   alone is enough to invalidate the cached copy of every module on the
   next page load — no need to keep an importmap in sync by hand.
 -->
+<link rel="manifest" href="./manifest.webmanifest" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="הון ג'וניור" />
+<meta name="theme-color" content="#151219" />
 <script>
+// Tear down any service worker / app cache left over from older builds.
+// iOS home-screen webapps will otherwise keep serving the stale shell.
+try {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations?.().then((rs) => rs.forEach((r) => r.unregister()));
+  }
+  if ('caches' in window) {
+    caches.keys?.().then((keys) => keys.forEach((k) => caches.delete(k)));
+  }
+} catch (_) { /* best-effort cleanup */ }
+
+// Surface boot failures so the page never silently sits blank.
+function jiShowBootError(msg, detail) {
+  const el = document.getElementById('ji-boot-error') || document.createElement('div');
+  el.id = 'ji-boot-error';
+  el.style.cssText = 'position:fixed;inset:1rem;z-index:9999;padding:1.25rem;border-radius:1rem;background:rgba(40,20,20,0.92);color:#ffd6d3;font:14px/1.5 system-ui,-apple-system,sans-serif;direction:rtl;text-align:right;border:1px solid rgba(255,180,170,0.4);box-shadow:0 20px 60px rgba(0,0,0,0.7);overflow:auto;max-height:80vh;';
+  el.innerHTML = '<div style="font-weight:600;font-size:16px;margin-bottom:.5rem;">תקלה בטעינה</div>'
+    + '<div style="margin-bottom:.75rem;">' + msg + '</div>'
+    + '<div style="font-size:12px;opacity:.8;margin-bottom:.75rem;direction:ltr;text-align:left;white-space:pre-wrap;">' + (detail || '') + '</div>'
+    + '<div style="font-size:13px;opacity:.9;">אם הוספת קיצור-דרך למסך הבית: לחץ ארוכות עליו → הסר אפליקציה, פתח את ה-URL בסאפארי, ואז Add to Home Screen מחדש.</div>'
+    + '<button onclick="location.reload()" style="margin-top:.75rem;padding:.5rem 1rem;border-radius:.5rem;background:#ffb4ab;color:#241010;border:none;font-weight:600;cursor:pointer;">נסה שוב</button>';
+  if (!el.isConnected) document.body.appendChild(el);
+}
+window.addEventListener('error', (e) => { if (!window.JI) jiShowBootError('שגיאת JS:', (e.error && e.error.stack) || e.message); });
+window.addEventListener('unhandledrejection', (e) => { if (!window.JI) jiShowBootError('Promise נדחה:', (e.reason && e.reason.stack) || String(e.reason)); });
+
 (async () => {
   const MODULES = [
     './app.js',
@@ -37,16 +68,28 @@
     // user at least sees a fresh build instead of a broken page.
     v = String(Date.now());
   }
-  const importmap = { imports: Object.fromEntries(MODULES.map((p) => [p, `${p}?v=${v}`])) };
-  const mapEl = document.createElement('script');
-  mapEl.type = 'importmap';
-  mapEl.textContent = JSON.stringify(importmap);
-  document.head.appendChild(mapEl);
+  try {
+    const importmap = { imports: Object.fromEntries(MODULES.map((p) => [p, `${p}?v=${v}`])) };
+    const mapEl = document.createElement('script');
+    mapEl.type = 'importmap';
+    mapEl.textContent = JSON.stringify(importmap);
+    document.head.appendChild(mapEl);
 
-  const appEl = document.createElement('script');
-  appEl.type = 'module';
-  appEl.src = `./app.js?v=${v}`;
-  document.body.appendChild(appEl);
+    // Wait for body before appending the entry module.
+    const onBodyReady = () => new Promise((res) => {
+      if (document.body) return res();
+      document.addEventListener('DOMContentLoaded', () => res(), { once: true });
+    });
+    await onBodyReady();
+
+    const appEl = document.createElement('script');
+    appEl.type = 'module';
+    appEl.src = `./app.js?v=${v}`;
+    appEl.onerror = (e) => jiShowBootError('כשל בטעינת app.js (גרסה ' + v + ')', String(e));
+    document.body.appendChild(appEl);
+  } catch (e) {
+    jiShowBootError('כשל בבוטסטרפ:', e && e.stack || String(e));
+  }
 })();
 </script>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
