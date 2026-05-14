@@ -747,6 +747,14 @@ export class UI {
     });
   }
 
+  _refreshAllQuotes() {
+    return this._refreshQuotes(
+      $('#btn-fetch-quotes'),
+      $('#btn-fetch-quotes-mobile'),
+      $('#btn-fetch-quotes-side'),
+    );
+  }
+
   async _refreshQuotes(...buttons) {
     const state = this.sm.getState();
     const derived = this.sm.getDerived();
@@ -793,12 +801,11 @@ export class UI {
     const quoteBox = $('#settings-quotes');
     if (quoteBox) {
       quoteBox.insertAdjacentHTML('beforebegin', `<button id="btn-fetch-quotes" class="bg-primary/20 text-primary px-4 py-2 rounded-xl text-sm font-semibold hover:bg-primary/30 transition-colors mb-4 flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">sync</span> רענן שערים (Yahoo)</button>`);
-      $('#btn-fetch-quotes').addEventListener('click', () =>
-        this._refreshQuotes($('#btn-fetch-quotes'), $('#btn-fetch-quotes-hero')));
+      $('#btn-fetch-quotes').addEventListener('click', () => this._refreshAllQuotes());
     }
 
-    $('#btn-fetch-quotes-hero')?.addEventListener('click', () =>
-      this._refreshQuotes($('#btn-fetch-quotes-hero'), $('#btn-fetch-quotes')));
+    $('#btn-fetch-quotes-mobile')?.addEventListener('click', () => this._refreshAllQuotes());
+    $('#btn-fetch-quotes-side')?.addEventListener('click', () => this._refreshAllQuotes());
 
     $('#btn-add-kid').addEventListener('click', () => {
       const name = prompt('שם הילד/ה החדש/ה');
