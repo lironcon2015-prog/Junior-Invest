@@ -382,6 +382,43 @@
       margin-bottom: 0.5rem;
       border-bottom: 0.5px solid rgba(255,255,255,0.08);
     }
+    /* Suppress the ::before label on header cells even if they carry a
+       data-label attribute */
+    .table-as-cards tbody tr.row-card td.cell-header::before {
+      content: none !important;
+    }
+
+    /* Kid-portfolio lot rows: lay the 6 data cells out as a 2-col grid so
+       each datum (label above value) gets room to breathe instead of being
+       squeezed onto one line. */
+    .table-as-cards tbody tr.kid-lot-card {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 0.75rem;
+      row-gap: 0.5rem;
+    }
+    .table-as-cards tbody tr.kid-lot-card td.cell-header {
+      grid-column: 1 / -1;
+    }
+    .table-as-cards tbody tr.kid-lot-card td[data-label] {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.15rem;
+      padding: 0.35rem 0;
+      min-width: 0;
+    }
+    .table-as-cards tbody tr.kid-lot-card td[data-label]::before {
+      margin: 0;
+      display: block;
+    }
+    .table-as-cards tbody tr.kid-lot-card td[data-label] > bdi {
+      font-size: 0.95rem;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
     /* The kid-split cell becomes a block so its inner items stack nicely */
     .table-as-cards tbody tr.row-card td.cell-block {
       display: block;

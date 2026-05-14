@@ -531,15 +531,16 @@ export class UI {
         }
       }
 
+      const ltr = (s) => `<bdi dir="ltr" style="unicode-bidi: isolate;">${s}</bdi>`;
       return `
-        <tr class="row-card border-b border-white/5 hover:bg-white/[0.02]">
-          <td data-label="נכס" class="cell-header py-3 pr-4 font-semibold text-white"><bdi dir="ltr" class="ticker-cell inline-block whitespace-nowrap text-left font-data-tabular" style="unicode-bidi: isolate; max-width: 140px; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(lot.ticker)}</bdi></td>
-          <td data-label="תאריך קנייה" class="py-3 text-on-surface-variant text-xs whitespace-nowrap">${escapeHtml(formatDateHe(lot.openDate))}</td>
-          <td data-label="מחיר קנייה" class="py-3 font-data-tabular text-on-surface-variant whitespace-nowrap">${escapeHtml(priceFmt(lot.price, lot.currency))}</td>
-          <td data-label="מחיר נוכחי" class="py-3 font-data-tabular text-on-surface-variant whitespace-nowrap">${escapeHtml(priceFmt(qPrice, qCurrency))}</td>
-          <td data-label="שינוי %" class="py-3 font-data-tabular ${signCls(pctChange)}">${pctChange != null ? (pctChange * 100).toFixed(1) + '%' : '—'}</td>
-          <td data-label="רווח (₪)" class="py-3 font-data-tabular ${signCls(lotProfit)}">${lotProfit != null ? fmtIls(lotProfit) : '—'}</td>
-          <td data-label="תשואה שנתית" class="py-3 font-data-tabular ${signCls(xirrVal)}">${xirrVal != null ? (xirrVal * 100).toFixed(1) + '%' : '—'}</td>
+        <tr class="row-card kid-lot-card border-b border-white/5 hover:bg-white/[0.02]">
+          <td class="cell-header py-3 pr-4 font-semibold text-white"><bdi dir="ltr" class="ticker-cell inline-block whitespace-nowrap text-left font-data-tabular" style="unicode-bidi: isolate; max-width: 140px; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(lot.ticker)}</bdi></td>
+          <td data-label="תאריך קנייה" class="py-3 text-on-surface-variant text-xs">${ltr(escapeHtml(formatDateHe(lot.openDate)))}</td>
+          <td data-label="מחיר קנייה" class="py-3 font-data-tabular text-on-surface-variant">${ltr(escapeHtml(priceFmt(lot.price, lot.currency)))}</td>
+          <td data-label="מחיר נוכחי" class="py-3 font-data-tabular text-on-surface-variant">${ltr(escapeHtml(priceFmt(qPrice, qCurrency)))}</td>
+          <td data-label="שינוי %" class="py-3 font-data-tabular ${signCls(pctChange)}">${ltr(pctChange != null ? (pctChange * 100).toFixed(1) + '%' : '—')}</td>
+          <td data-label="רווח (₪)" class="py-3 font-data-tabular ${signCls(lotProfit)}">${ltr(lotProfit != null ? fmtIls(lotProfit) : '—')}</td>
+          <td data-label="תשואה שנתית" class="py-3 font-data-tabular ${signCls(xirrVal)}">${ltr(xirrVal != null ? (xirrVal * 100).toFixed(1) + '%' : '—')}</td>
         </tr>`;
     }).join('');
 
