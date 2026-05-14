@@ -144,8 +144,8 @@ export class UI {
       const hasLots = r.lots.length > 0;
       const lotsId = `lots-${r.ticker.replace(/[^a-zA-Z0-9]/g, '_')}`;
       return `
-        <tr class="border-b border-white/5 hover:bg-white/[0.02] transition-colors group">
-          <td class="py-5 pr-4">
+        <tr class="row-card border-b border-white/5 hover:bg-white/[0.02] transition-colors group">
+          <td class="cell-header py-5 pr-4">
             <div class="flex items-center gap-3">
               ${hasLots
                 ? `<button data-lots-toggle="${escapeHtml(lotsId)}" class="flex items-center justify-center w-6 h-6 rounded-lg bg-white/5 hover:bg-white/10 transition-colors shrink-0" title="הצג לוטים">
@@ -155,19 +155,21 @@ export class UI {
               <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/5 shrink-0">
                 <span class="material-symbols-outlined text-on-surface-variant text-base">show_chart</span>
               </div>
-              <div>
-                <div class="font-semibold text-white"><bdi dir="ltr" class="inline-block whitespace-nowrap text-left font-data-tabular" style="unicode-bidi: isolate; max-width: 140px; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(r.ticker)}</bdi></div>
-                <div class="text-xs text-on-surface-variant">${escapeHtml(r.company)}</div>
+              <div class="min-w-0 flex-1">
+                <div class="font-semibold text-white"><bdi dir="ltr" class="ticker-cell inline-block whitespace-nowrap text-left font-data-tabular" style="unicode-bidi: isolate; max-width: 140px; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(r.ticker)}</bdi></div>
+                <div class="text-xs text-on-surface-variant truncate">${escapeHtml(r.company)}</div>
               </div>
             </div>
           </td>
-          <td class="py-5 text-on-surface-variant">${r.totalSharesFmt}</td>
-          <td class="py-5 text-on-surface-variant">
-            ${r.priceFmt}
-            <span class="text-[10px] uppercase tracking-widest opacity-70 mr-2">${escapeHtml(formatDateHe(r.asOf))}</span>
+          <td data-label="סה״כ מניות" class="py-5 text-on-surface-variant">${r.totalSharesFmt}</td>
+          <td data-label="מחיר נוכחי" class="py-5 text-on-surface-variant">
+            <span>
+              ${r.priceFmt}
+              <span class="text-[10px] uppercase tracking-widest opacity-70 mr-2">${escapeHtml(formatDateHe(r.asOf))}</span>
+            </span>
           </td>
-          <td class="py-5 text-white font-data-tabular">${r.valueFmt}</td>
-          <td class="py-5">
+          <td data-label="שווי בש״ח" class="py-5 text-white font-data-tabular">${r.valueFmt}</td>
+          <td data-label="פיצול בין הילדים" class="cell-block py-5">
             <div class="flex flex-col gap-1 text-xs">
               ${r.perKid.map((k) => `
                 <div class="flex items-center justify-between gap-3 bg-white/[0.03] border border-white/5 rounded-lg px-3 py-1.5">
@@ -177,10 +179,10 @@ export class UI {
             </div>
           </td>
         </tr>
-        ${hasLots ? `<tr id="${escapeHtml(lotsId)}" class="hidden border-b border-white/5">
+        ${hasLots ? `<tr id="${escapeHtml(lotsId)}" class="lots-row hidden border-b border-white/5">
           <td colspan="5" class="pb-3 px-4">
-            <div class="rounded-xl bg-white/[0.02] border border-white/5 overflow-hidden">
-              <table class="w-full text-right text-xs">
+            <div class="lots-inner rounded-xl bg-white/[0.02] border border-white/5 overflow-hidden">
+              <table class="w-full text-right text-xs" style="min-width: 420px;">
                 <thead>
                   <tr class="border-b border-white/5">
                     <th class="py-2 pr-4 font-semibold text-on-surface-variant/60 font-label-caps uppercase tracking-wider">תאריך</th>
@@ -193,11 +195,11 @@ export class UI {
                 <tbody>
                   ${r.lots.map((lot) => `
                     <tr class="border-b border-white/[0.03] last:border-0">
-                      <td class="py-2 pr-4 text-on-surface-variant">${escapeHtml(formatDateHe(lot.openDate))}</td>
-                      <td class="py-2 text-on-surface-variant">${escapeHtml(lot.buyPriceFmt)}</td>
-                      <td class="py-2 text-on-surface-variant">${escapeHtml(lot.currentPriceFmt)}</td>
-                      <td class="py-2 font-data-tabular ${lot.pctSign === 'pos' ? 'text-emerald-400' : lot.pctSign === 'neg' ? 'text-red-400' : 'text-on-surface-variant'}">${escapeHtml(lot.pctChangeFmt)}</td>
-                      <td class="py-2 pl-4 font-data-tabular ${lot.xirrSign === 'pos' ? 'text-emerald-400' : lot.xirrSign === 'neg' ? 'text-red-400' : 'text-on-surface-variant'}">${escapeHtml(lot.xirrLotFmt)}</td>
+                      <td class="py-2 pr-4 text-on-surface-variant whitespace-nowrap">${escapeHtml(formatDateHe(lot.openDate))}</td>
+                      <td class="py-2 text-on-surface-variant whitespace-nowrap">${escapeHtml(lot.buyPriceFmt)}</td>
+                      <td class="py-2 text-on-surface-variant whitespace-nowrap">${escapeHtml(lot.currentPriceFmt)}</td>
+                      <td class="py-2 font-data-tabular whitespace-nowrap ${lot.pctSign === 'pos' ? 'text-emerald-400' : lot.pctSign === 'neg' ? 'text-red-400' : 'text-on-surface-variant'}">${escapeHtml(lot.pctChangeFmt)}</td>
+                      <td class="py-2 pl-4 font-data-tabular whitespace-nowrap ${lot.xirrSign === 'pos' ? 'text-emerald-400' : lot.xirrSign === 'neg' ? 'text-red-400' : 'text-on-surface-variant'}">${escapeHtml(lot.xirrLotFmt)}</td>
                     </tr>`).join('')}
                 </tbody>
               </table>
@@ -228,19 +230,21 @@ export class UI {
       return;
     }
     tbody.innerHTML = vm.rows.map((r) => `
-      <tr class="border-b border-white/5 hover:bg-white/[0.02] group">
-        <td class="py-4 pr-4 text-on-surface-variant text-xs">${escapeHtml(formatDateHe(r.date))}</td>
-        <td class="py-4">
+      <tr class="row-card border-b border-white/5 hover:bg-white/[0.02] group">
+        <td data-label="תאריך" class="py-4 pr-4 text-on-surface-variant text-xs whitespace-nowrap">${escapeHtml(formatDateHe(r.date))}</td>
+        <td data-label="פעולה" class="py-4">
           <span class="text-xs uppercase tracking-widest font-semibold ${r.sign === 'pos' ? 'text-secondary' : 'text-primary'}">
             ${escapeHtml(r.label)}
           </span>
         </td>
-        <td class="py-4 text-on-background font-medium"><bdi dir="ltr" class="inline-block whitespace-nowrap text-left font-data-tabular" style="unicode-bidi: isolate; max-width: 140px; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(r.who)}</bdi></td>
-        <td class="py-4 text-on-surface-variant text-xs">${escapeHtml(r.details)}</td>
-        <td class="py-4 text-left">
+        <td data-label="נושא" class="py-4 text-on-background font-medium"><bdi dir="ltr" class="ticker-cell inline-block whitespace-nowrap text-left font-data-tabular" style="unicode-bidi: isolate; max-width: 140px; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(r.who)}</bdi></td>
+        <td data-label="פרטים" class="py-4 text-on-surface-variant text-xs">${escapeHtml(r.details)}</td>
+        <td data-label="סכום" class="cell-amount py-4 text-left">
           <span class="font-data-tabular ${r.sign === 'pos' ? 'text-secondary' : 'text-on-background'}">${escapeHtml(r.amountFmt)}</span>
-          <button data-edit-tx="${r.id}" class="opacity-0 group-hover:opacity-100 transition-opacity mr-3 text-on-surface-variant hover:text-secondary text-xs">עריכה</button>
-          <button data-del-tx="${r.id}" class="opacity-0 group-hover:opacity-100 transition-opacity text-on-surface-variant hover:text-primary text-xs">מחק</button>
+          <span class="row-actions inline-flex items-center gap-2 mr-3 md:mr-3">
+            <button data-edit-tx="${r.id}" class="opacity-0 md:group-hover:opacity-100 transition-opacity text-on-surface-variant hover:text-secondary text-xs">עריכה</button>
+            <button data-del-tx="${r.id}" class="opacity-0 md:group-hover:opacity-100 transition-opacity text-on-surface-variant hover:text-primary text-xs">מחק</button>
+          </span>
         </td>
       </tr>
     `).join('');
@@ -327,16 +331,16 @@ export class UI {
       const tickers = Object.values(state.quotes).sort((a, b) => a.ticker.localeCompare(b.ticker));
       quoteBox.innerHTML = tickers.length
         ? tickers.map((q) => `
-          <div class="flex items-center gap-3 bg-white/[0.03] border border-white/5 rounded-xl px-4 py-3">
-            <div class="flex-1">
-              <div class="text-white font-semibold"><bdi dir="ltr" class="inline-block whitespace-nowrap text-left font-data-tabular" style="unicode-bidi: isolate; max-width: 140px; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(q.ticker)}</bdi></div>
-              <div class="text-xs text-on-surface-variant">${escapeHtml(q.company)} · ${escapeHtml(formatDateHe(q.asOf))}</div>
+          <div class="flex flex-wrap items-center gap-2 sm:gap-3 bg-white/[0.03] border border-white/5 rounded-xl px-3 sm:px-4 py-3">
+            <div class="flex-1 min-w-0">
+              <div class="text-white font-semibold"><bdi dir="ltr" class="ticker-cell inline-block whitespace-nowrap text-left font-data-tabular" style="unicode-bidi: isolate; max-width: 140px; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(q.ticker)}</bdi></div>
+              <div class="text-xs text-on-surface-variant truncate">${escapeHtml(q.company)} · ${escapeHtml(formatDateHe(q.asOf))}</div>
             </div>
             <input type="number" step="0.01" min="0" value="${q.price ?? q.priceUsd}"
                    data-quote="${q.ticker}"
-                   class="bg-transparent text-white font-data-tabular w-28 text-left outline-none focus:text-primary" />
-            <span class="text-xs text-on-surface-variant w-16 inline-block text-left">${escapeHtml(q.currency === 'ILS-Agorot' ? 'אג\'' : (q.currency || 'USD'))}</span>
-            <button data-rm-quote="${escapeHtml(q.ticker)}" class="text-on-surface-variant hover:text-primary text-xs ml-3 mr-2">הסר</button>
+                   class="bg-transparent text-white font-data-tabular w-24 sm:w-28 text-left outline-none focus:text-primary shrink-0" />
+            <span class="text-xs text-on-surface-variant shrink-0 min-w-[2rem] inline-block text-left">${escapeHtml(q.currency === 'ILS-Agorot' ? 'אג\'' : (q.currency || 'USD'))}</span>
+            <button data-rm-quote="${escapeHtml(q.ticker)}" class="text-on-surface-variant hover:text-primary text-xs shrink-0">הסר</button>
           </div>`).join('')
         : '<p class="text-sm text-on-surface-variant">לא נשמרו ציטוטים. ייווצרו אוטומטית בעת קנייה ראשונה.</p>';
 
@@ -528,46 +532,46 @@ export class UI {
       }
 
       return `
-        <tr class="border-b border-white/5 hover:bg-white/[0.02]">
-          <td class="py-3 pr-4 font-semibold text-white"><bdi dir="ltr" class="inline-block whitespace-nowrap text-left font-data-tabular" style="unicode-bidi: isolate; max-width: 140px; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(lot.ticker)}</bdi></td>
-          <td class="py-3 text-on-surface-variant text-xs">${escapeHtml(formatDateHe(lot.openDate))}</td>
-          <td class="py-3 font-data-tabular text-on-surface-variant">${escapeHtml(priceFmt(lot.price, lot.currency))}</td>
-          <td class="py-3 font-data-tabular text-on-surface-variant">${escapeHtml(priceFmt(qPrice, qCurrency))}</td>
-          <td class="py-3 font-data-tabular ${signCls(pctChange)}">${pctChange != null ? (pctChange * 100).toFixed(1) + '%' : '—'}</td>
-          <td class="py-3 font-data-tabular ${signCls(lotProfit)}">${lotProfit != null ? fmtIls(lotProfit) : '—'}</td>
-          <td class="py-3 font-data-tabular ${signCls(xirrVal)}">${xirrVal != null ? (xirrVal * 100).toFixed(1) + '%' : '—'}</td>
+        <tr class="row-card border-b border-white/5 hover:bg-white/[0.02]">
+          <td data-label="נכס" class="cell-header py-3 pr-4 font-semibold text-white"><bdi dir="ltr" class="ticker-cell inline-block whitespace-nowrap text-left font-data-tabular" style="unicode-bidi: isolate; max-width: 140px; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(lot.ticker)}</bdi></td>
+          <td data-label="תאריך קנייה" class="py-3 text-on-surface-variant text-xs whitespace-nowrap">${escapeHtml(formatDateHe(lot.openDate))}</td>
+          <td data-label="מחיר קנייה" class="py-3 font-data-tabular text-on-surface-variant whitespace-nowrap">${escapeHtml(priceFmt(lot.price, lot.currency))}</td>
+          <td data-label="מחיר נוכחי" class="py-3 font-data-tabular text-on-surface-variant whitespace-nowrap">${escapeHtml(priceFmt(qPrice, qCurrency))}</td>
+          <td data-label="שינוי %" class="py-3 font-data-tabular ${signCls(pctChange)}">${pctChange != null ? (pctChange * 100).toFixed(1) + '%' : '—'}</td>
+          <td data-label="רווח (₪)" class="py-3 font-data-tabular ${signCls(lotProfit)}">${lotProfit != null ? fmtIls(lotProfit) : '—'}</td>
+          <td data-label="תשואה שנתית" class="py-3 font-data-tabular ${signCls(xirrVal)}">${xirrVal != null ? (xirrVal * 100).toFixed(1) + '%' : '—'}</td>
         </tr>`;
     }).join('');
 
     section.innerHTML = `
-      <div class="glass-panel rounded-3xl p-8 md:p-10">
-        <div class="flex items-center gap-4 mb-8">
-          <button class="text-on-surface-variant hover:text-white transition-colors" id="kid-portfolio-back">
+      <div class="glass-panel rounded-3xl p-4 sm:p-6 md:p-8 lg:p-10">
+        <div class="flex flex-wrap items-center gap-3 md:gap-4 mb-5 md:mb-8">
+          <button class="text-on-surface-variant hover:text-white transition-colors shrink-0" id="kid-portfolio-back">
             <span class="material-symbols-outlined">arrow_forward</span>
           </button>
-          <div class="w-12 h-12 rounded-full bg-surface-container overflow-hidden border border-white/10 flex items-center justify-center">
+          <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-surface-container overflow-hidden border border-white/10 flex items-center justify-center shrink-0">
             <span class="material-symbols-outlined text-primary" style="font-size:22px;">${escapeHtml(avatarIcon)}</span>
           </div>
-          <h2 class="text-2xl font-bold text-on-background">${escapeHtml(displayName)}</h2>
-          <span class="text-on-surface-variant text-sm">שווי נוכחי: <span class="text-white font-data-tabular">${fmtIls(pv)}</span></span>
+          <h2 class="text-xl md:text-2xl font-bold text-on-background min-w-0 truncate">${escapeHtml(displayName)}</h2>
+          <span class="text-on-surface-variant text-sm w-full md:w-auto md:mr-auto">שווי נוכחי: <span class="text-white font-data-tabular">${fmtIls(pv)}</span></span>
         </div>
-        <div class="grid grid-cols-3 gap-4 mb-8 text-center">
-          <div class="bg-white/[0.03] border border-white/5 rounded-2xl p-4">
-            <div class="text-xs text-on-surface-variant/60 uppercase tracking-wider mb-1">רווח כולל</div>
-            <div class="text-xl font-bold font-data-tabular ${signCls(profit.total)}">${fmtIls(profit.total)}</div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-5 md:mb-8 text-center">
+          <div class="bg-white/[0.03] border border-white/5 rounded-2xl p-3 md:p-4">
+            <div class="text-[10px] md:text-xs text-on-surface-variant/60 uppercase tracking-wider mb-1">רווח כולל</div>
+            <div class="text-lg md:text-xl font-bold font-data-tabular ${signCls(profit.total)}">${fmtIls(profit.total)}</div>
           </div>
-          <div class="bg-white/[0.03] border border-white/5 rounded-2xl p-4">
-            <div class="text-xs text-on-surface-variant/60 uppercase tracking-wider mb-1">רווח לא ממומש</div>
-            <div class="text-xl font-bold font-data-tabular ${signCls(profit.unrealized)}">${fmtIls(profit.unrealized)}</div>
+          <div class="bg-white/[0.03] border border-white/5 rounded-2xl p-3 md:p-4">
+            <div class="text-[10px] md:text-xs text-on-surface-variant/60 uppercase tracking-wider mb-1">רווח לא ממומש</div>
+            <div class="text-lg md:text-xl font-bold font-data-tabular ${signCls(profit.unrealized)}">${fmtIls(profit.unrealized)}</div>
           </div>
-          <div class="bg-white/[0.03] border border-white/5 rounded-2xl p-4">
-            <div class="text-xs text-on-surface-variant/60 uppercase tracking-wider mb-1">רווח ממומש</div>
-            <div class="text-xl font-bold font-data-tabular ${signCls(profit.realized)}">${fmtIls(profit.realized)}</div>
+          <div class="bg-white/[0.03] border border-white/5 rounded-2xl p-3 md:p-4">
+            <div class="text-[10px] md:text-xs text-on-surface-variant/60 uppercase tracking-wider mb-1">רווח ממומש</div>
+            <div class="text-lg md:text-xl font-bold font-data-tabular ${signCls(profit.realized)}">${fmtIls(profit.realized)}</div>
           </div>
         </div>
         ${lots.length ? `
-        <div class="overflow-x-auto">
-          <table class="w-full text-right border-collapse text-sm">
+        <div class="md:overflow-x-auto">
+          <table class="w-full text-right border-collapse text-sm table-as-cards">
             <thead>
               <tr class="border-b border-white/10 font-label-caps text-[11px] text-on-surface-variant uppercase tracking-[0.15em]">
                 <th class="py-3 pr-4">נכס</th>

@@ -314,8 +314,137 @@
   @media (max-width: 767px) {
     #kids-grid { grid-template-columns: 1fr !important; }
   }
-  #edit-tx-dialog { border: none; background: transparent; padding: 0; max-width: min(90vw, 520px); width: 100%; }
+  #edit-tx-dialog { border: none; background: transparent; padding: 0; max-width: min(94vw, 520px); width: 100%; }
   #edit-tx-dialog::backdrop { background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); }
+
+  /* ---------- Mobile responsive tables ----------
+     On small screens the standard table layout breaks because each row holds
+     too much content. We collapse rows into cards with labels coming from
+     the data-label attribute set in JS. */
+  @media (max-width: 767px) {
+    /* Slim down glass-panel padding so content gets the screen width */
+    .glass-panel {
+      padding: 1rem !important;
+      border-radius: 1.25rem;
+    }
+    .glass-panel h2.font-headline-md,
+    .glass-panel h3.font-headline-md {
+      font-size: 1.125rem;
+      margin-bottom: 1rem;
+      gap: 0.75rem;
+    }
+    .glass-panel h2 .w-10.h-10,
+    .glass-panel h3 .w-10.h-10 {
+      width: 2rem; height: 2rem;
+    }
+    .glass-panel h2 .text-xl,
+    .glass-panel h3 .text-xl {
+      font-size: 1rem;
+    }
+
+    /* Holdings table -> card list */
+    .table-as-cards,
+    .table-as-cards tbody {
+      display: block;
+      width: 100%;
+    }
+    .table-as-cards thead { display: none; }
+    .table-as-cards tbody tr.row-card {
+      display: block;
+      background: rgba(255,255,255,0.03);
+      border: 0.5px solid rgba(255,255,255,0.08);
+      border-radius: 1rem;
+      padding: 0.875rem;
+      margin-bottom: 0.75rem;
+    }
+    .table-as-cards tbody tr.row-card td {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.4rem 0;
+      border: none;
+      width: auto;
+    }
+    .table-as-cards tbody tr.row-card td[data-label]::before {
+      content: attr(data-label);
+      font-size: 10px;
+      color: rgba(202, 196, 212, 0.7);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    /* The asset cell is the card header — full width, no label */
+    .table-as-cards tbody tr.row-card td.cell-header {
+      display: block;
+      padding: 0 0 0.6rem 0;
+      margin-bottom: 0.5rem;
+      border-bottom: 0.5px solid rgba(255,255,255,0.08);
+    }
+    /* The kid-split cell becomes a block so its inner items stack nicely */
+    .table-as-cards tbody tr.row-card td.cell-block {
+      display: block;
+      padding-top: 0.6rem;
+      margin-top: 0.5rem;
+      border-top: 0.5px solid rgba(255,255,255,0.08);
+    }
+    .table-as-cards tbody tr.row-card td.cell-block::before {
+      display: block;
+      margin-bottom: 0.4rem;
+    }
+    /* Expanded lots row spans full width */
+    .table-as-cards tbody tr.lots-row {
+      display: block;
+      background: transparent;
+      border: none;
+      padding: 0;
+      margin: -0.5rem 0 0.75rem 0;
+    }
+    .table-as-cards tbody tr.lots-row td {
+      display: block;
+      padding: 0;
+    }
+    .table-as-cards tbody tr.lots-row td::before { content: none; }
+    .table-as-cards tbody tr.lots-row .lots-inner {
+      overflow-x: auto;
+    }
+
+    /* Ledger amount cell: keep buttons on a new line below the amount */
+    .table-as-cards tbody tr.row-card td.cell-amount {
+      flex-wrap: wrap;
+    }
+    .table-as-cards tbody tr.row-card td.cell-amount .row-actions {
+      display: flex;
+      gap: 0.5rem;
+      width: 100%;
+      justify-content: flex-end;
+      margin-top: 0.4rem;
+    }
+    /* Edit/delete buttons always visible on touch screens */
+    .table-as-cards tbody tr.row-card td.cell-amount .row-actions button {
+      opacity: 1 !important;
+    }
+
+    /* Reduce ticker max-width on mobile to avoid clipping issues */
+    bdi.ticker-cell {
+      max-width: 90px !important;
+    }
+
+    /* Hero typography — scales with viewport so big numbers never overflow */
+    #hero-total { font-size: clamp(1.75rem, 9vw, 2.5rem) !important; line-height: 1.1; }
+
+    /* Mobile top bar: tighten icon button padding and title size */
+    .mobile-topbar-title { font-size: 1.125rem !important; }
+    .mobile-topbar-nav button { padding: 0.4rem !important; }
+    .mobile-topbar-nav .material-symbols-outlined { font-size: 22px; }
+  }
+
+  /* Edit/delete buttons should always be visible on touch devices, even
+     when not in a card-as-table context */
+  @media (hover: none) {
+    .row-actions button { opacity: 1 !important; }
+  }
 </style>
 </head>
 <body class="font-body-md text-body-md min-h-screen flex relative overflow-x-hidden" dir="rtl">
@@ -372,19 +501,19 @@
 <main class="flex-1 mr-0 md:mr-sidebar-width p-margin-mobile md:p-container-padding flex flex-col gap-card-gap relative z-10 max-w-container-max mx-auto w-full">
 
   <!-- Mobile top bar (Midnight Astral restyle) -->
-  <div class="md:hidden flex justify-between items-center h-16 bg-background/60 backdrop-blur-xl border-b-[0.5px] border-white/10 -mx-margin-mobile px-margin-mobile mb-2 z-40 sticky top-0">
-    <h1 class="font-headline-lg-mobile text-headline-lg-mobile text-primary flex items-center gap-2">
-      <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-primary/40 to-transparent flex items-center justify-center border border-primary/50">
+  <div class="md:hidden flex justify-between items-center gap-2 h-14 bg-background/60 backdrop-blur-xl border-b-[0.5px] border-white/10 -mx-margin-mobile px-3 mb-2 z-40 sticky top-0">
+    <h1 class="mobile-topbar-title font-headline-lg-mobile text-primary flex items-center gap-2 min-w-0">
+      <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-primary/40 to-transparent flex items-center justify-center border border-primary/50 shrink-0">
         <span class="material-symbols-outlined text-primary" style="font-size:14px;">account_balance</span>
       </div>
-      הון ג'וניור
+      <span class="truncate">הון ג'וניור</span>
     </h1>
-    <div class="flex gap-1">
-      <button data-nav="dashboard" class="p-2 text-primary transition-colors drop-shadow-[0_0_8px_rgba(206,189,255,0.8)]"><span class="material-symbols-outlined fill">dashboard</span></button>
-      <button data-nav="holdings" class="p-2 text-on-surface-variant hover:text-on-surface transition-colors"><span class="material-symbols-outlined">account_balance_wallet</span></button>
-      <button data-nav="ledger" class="p-2 text-on-surface-variant hover:text-on-surface transition-colors"><span class="material-symbols-outlined">receipt_long</span></button>
-      <button id="btn-export-mobile" class="p-2 text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">download</span></button>
-      <button id="btn-import-mobile" class="p-2 text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">upload</span></button>
+    <div class="mobile-topbar-nav flex gap-0.5 shrink-0">
+      <button data-nav="dashboard" class="p-2 text-primary transition-colors drop-shadow-[0_0_8px_rgba(206,189,255,0.8)]" aria-label="לוח בקרה"><span class="material-symbols-outlined fill">dashboard</span></button>
+      <button data-nav="holdings" class="p-2 text-on-surface-variant hover:text-on-surface transition-colors" aria-label="אחזקות"><span class="material-symbols-outlined">account_balance_wallet</span></button>
+      <button data-nav="ledger" class="p-2 text-on-surface-variant hover:text-on-surface transition-colors" aria-label="יומן"><span class="material-symbols-outlined">receipt_long</span></button>
+      <button id="btn-export-mobile" class="p-2 text-on-surface-variant hover:text-primary transition-colors" aria-label="ייצוא"><span class="material-symbols-outlined">download</span></button>
+      <button id="btn-import-mobile" class="p-2 text-on-surface-variant hover:text-primary transition-colors" aria-label="ייבוא"><span class="material-symbols-outlined">upload</span></button>
     </div>
   </div>
 
@@ -415,15 +544,15 @@
 
   <!-- ================ HOLDINGS ================ -->
   <section id="view-holdings" class="hidden flex-col gap-card-gap">
-    <div class="glass-panel rounded-3xl p-8 md:p-10">
-      <h2 class="font-headline-md text-2xl font-bold text-on-background flex items-center gap-4 mb-8">
-        <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-primary/20">
+    <div class="glass-panel rounded-3xl p-4 sm:p-6 md:p-8 lg:p-10">
+      <h2 class="font-headline-md text-xl md:text-2xl font-bold text-on-background flex items-center gap-3 md:gap-4 mb-5 md:mb-8">
+        <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-primary/20 shrink-0">
           <span class="material-symbols-outlined text-primary text-xl">account_balance_wallet</span>
         </div>
         אחזקות (ילדים בלבד)
       </h2>
-      <div class="overflow-x-auto">
-        <table class="w-full text-right border-collapse">
+      <div class="md:overflow-x-auto">
+        <table class="w-full text-right border-collapse table-as-cards">
           <thead>
             <tr class="border-b border-white/10 font-label-caps text-[11px] text-on-surface-variant uppercase tracking-[0.15em]">
               <th class="py-5 font-semibold pr-4">נכס</th>
@@ -438,21 +567,21 @@
       </div>
     </div>
 
-    <div class="glass-panel rounded-3xl p-8 md:p-10">
-      <h3 class="font-headline-md text-xl font-bold text-on-background mb-6">ציטוטים</h3>
+    <div class="glass-panel rounded-3xl p-4 sm:p-6 md:p-8 lg:p-10">
+      <h3 class="font-headline-md text-lg md:text-xl font-bold text-on-background mb-4 md:mb-6">ציטוטים</h3>
       <div id="settings-quotes" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
     </div>
   </section>
 
   <!-- ================ KID PORTFOLIO ================ -->
-  <section id="view-kid-portfolio" class="hidden flex-col gap-6 px-4 md:px-8 pb-16"></section>
+  <section id="view-kid-portfolio" class="hidden flex-col gap-6 pb-16"></section>
 
   <!-- ================ LEDGER ================ -->
   <section id="view-ledger" class="hidden flex-col gap-card-gap">
 
-    <div class="glass-panel rounded-3xl p-8 md:p-10">
-      <h2 class="font-headline-md text-2xl font-bold text-on-background flex items-center gap-4 mb-8">
-        <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-primary/20">
+    <div class="glass-panel rounded-3xl p-4 sm:p-6 md:p-8 lg:p-10">
+      <h2 class="font-headline-md text-xl md:text-2xl font-bold text-on-background flex items-center gap-3 md:gap-4 mb-5 md:mb-8">
+        <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-primary/20 shrink-0">
           <span class="material-symbols-outlined text-primary text-xl">add_circle</span>
         </div>
         רישום פעולה חדשה
@@ -545,11 +674,11 @@
     </div>
 
     <!-- Settings -->
-    <div class="glass-panel rounded-3xl p-8 md:p-10">
-      <h2 class="font-headline-md text-xl font-bold text-on-background mb-6 flex items-center gap-3">
+    <div class="glass-panel rounded-3xl p-4 sm:p-6 md:p-8 lg:p-10">
+      <h2 class="font-headline-md text-lg md:text-xl font-bold text-on-background mb-4 md:mb-6 flex items-center gap-3">
         <span class="material-symbols-outlined text-primary">tune</span> הגדרות
       </h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
         <div>
           <label class="field-label">שער USD/ILS לשערוך</label>
           <input id="settings-fx" class="input-field tabular-nums" type="number" step="0.0001" min="0" />
@@ -565,15 +694,15 @@
     </div>
 
     <!-- History -->
-    <div class="glass-panel rounded-3xl p-8 md:p-10">
-      <h2 class="font-headline-md text-2xl font-bold text-on-background flex items-center gap-4 mb-8">
-        <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-primary/20">
+    <div class="glass-panel rounded-3xl p-4 sm:p-6 md:p-8 lg:p-10">
+      <h2 class="font-headline-md text-xl md:text-2xl font-bold text-on-background flex items-center gap-3 md:gap-4 mb-5 md:mb-8">
+        <div class="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center border border-primary/20 shrink-0">
           <span class="material-symbols-outlined text-primary text-xl">history</span>
         </div>
         יומן פעולות
       </h2>
-      <div class="overflow-x-auto">
-        <table class="w-full text-right border-collapse">
+      <div class="md:overflow-x-auto">
+        <table class="w-full text-right border-collapse table-as-cards">
           <thead>
             <tr class="border-b border-white/10 font-label-caps text-[11px] text-on-surface-variant uppercase tracking-[0.15em]">
               <th class="py-4 pr-4">תאריך</th>
