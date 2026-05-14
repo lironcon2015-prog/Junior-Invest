@@ -885,10 +885,13 @@ function pillHtml({ tone, text }) {
 }
 
 function kidCardHtml(kid, index = 0) {
+  // glowBright = visible focal color at the corner; glowSoft = mid-falloff
+  // shade so the radial-gradient feels diffuse like the old blurred orb
+  // instead of a hard color edge.
   const palette = [
-    { glow: 'rgba(206, 189, 255, 0.25)', accent: 'text-primary', bar: '#cebdff' },
-    { glow: 'rgba(69, 223, 164, 0.25)',  accent: 'text-secondary', bar: '#45dfa4' },
-    { glow: 'rgba(249, 189, 34, 0.25)',  accent: 'text-tertiary', bar: '#f9bd22' },
+    { glowBright: 'rgba(206, 189, 255, 0.85)', glowSoft: 'rgba(206, 189, 255, 0.32)', accent: 'text-primary', bar: '#cebdff' },
+    { glowBright: 'rgba(69, 223, 164, 0.80)',  glowSoft: 'rgba(69, 223, 164, 0.28)',  accent: 'text-secondary', bar: '#45dfa4' },
+    { glowBright: 'rgba(249, 189, 34, 0.80)',  glowSoft: 'rgba(249, 189, 34, 0.28)',  accent: 'text-tertiary', bar: '#f9bd22' },
   ];
   const c = palette[index % palette.length];
 
@@ -906,7 +909,7 @@ function kidCardHtml(kid, index = 0) {
 
   return `
     <div class="kid-card group flex flex-col gap-stack-md" data-kid-id="${escapeHtml(kid.id)}">
-      <div class="kid-glow" style="background: radial-gradient(circle at top left, ${c.glow} 0%, transparent 55%);"></div>
+      <div class="kid-glow" style="background: radial-gradient(circle at 15% 0%, ${c.glowBright} 0%, ${c.glowSoft} 22%, transparent 55%);"></div>
 
       <div class="flex justify-between items-start z-10 relative">
         <div class="flex items-center gap-stack-sm">
