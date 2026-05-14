@@ -488,8 +488,58 @@
       padding: 0;
     }
     .table-as-cards tbody tr.lots-row td::before { content: none; }
-    .table-as-cards tbody tr.lots-row .lots-inner {
-      overflow-x: auto;
+    /* Inner lots table: convert to a stack of cards so each lot is legible
+       without horizontal scrolling. */
+    .lots-table,
+    .lots-table thead,
+    .lots-table tbody {
+      display: block;
+      width: 100% !important;
+      min-width: 0 !important;
+    }
+    .lots-table { min-width: 0 !important; }
+    .lots-table thead { display: none; }
+    .lots-table tbody tr.lot-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 0.75rem;
+      row-gap: 0.4rem;
+      padding: 0.7rem 0.75rem;
+      border: 0.5px solid rgba(255,255,255,0.08);
+      border-radius: 0.75rem;
+      margin: 0.4rem 0;
+      background: rgba(255,255,255,0.03);
+    }
+    .lots-table tbody tr.lot-row td {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.15rem;
+      padding: 0 !important;
+      border: none;
+      min-width: 0;
+    }
+    .lots-table tbody tr.lot-row td.lot-date {
+      grid-column: 1 / -1;
+      padding-bottom: 0.4rem !important;
+      margin-bottom: 0.2rem;
+      border-bottom: 0.5px solid rgba(255,255,255,0.06) !important;
+    }
+    .lots-table tbody tr.lot-row td::before {
+      content: attr(data-label);
+      font-size: 10px;
+      color: rgba(202, 196, 212, 0.7);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-weight: 600;
+      display: block;
+    }
+    .lots-table tbody tr.lot-row td > bdi {
+      font-size: 0.85rem;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     /* Ledger amount cell: keep buttons on a new line below the amount */
