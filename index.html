@@ -6,29 +6,48 @@
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate" />
 <title>JuniorInvest</title>
 <!--
-  Cache-busting via importmap: every module URL is remapped to include
-  ?v=APP_VERSION so a version bump (in version.json AND below) invalidates
-  the browser/CDN cache for every module on the next reload of index.html.
-  Bump APP_VERSION in lockstep with version.json when you ship changes.
+  Cache-busting bootstrap. Reads APP_VERSION from version.json at runtime,
+  injects a matching importmap, then loads ./app.js. Bumping version.json
+  alone is enough to invalidate the cached copy of every module on the
+  next page load — no need to keep an importmap in sync by hand.
 -->
-<script type="importmap">
-{
-  "imports": {
-    "./app.js": "./app.js?v=1.2.0",
-    "./src/ui.js": "./src/ui.js?v=1.2.0",
-    "./src/state/LocalStoragePersistence.js": "./src/state/LocalStoragePersistence.js?v=1.2.0",
-    "./src/state/StateManager.js": "./src/state/StateManager.js?v=1.2.0",
-    "./src/view/Selectors.js": "./src/view/Selectors.js?v=1.2.0",
-    "./src/ledger/LedgerEngine.js": "./src/ledger/LedgerEngine.js?v=1.2.0",
-    "./src/ledger/FifoEngine.js": "./src/ledger/FifoEngine.js?v=1.2.0",
-    "./src/ledger/DividendEngine.js": "./src/ledger/DividendEngine.js?v=1.2.0",
-    "./src/math/Xirr.js": "./src/math/Xirr.js?v=1.2.0",
-    "./src/io/QuoteFetcher.js": "./src/io/QuoteFetcher.js?v=1.2.0",
-    "./src/util/MathUtils.js": "./src/util/MathUtils.js?v=1.2.0",
-    "./src/util/EventBus.js": "./src/util/EventBus.js?v=1.2.0",
-    "./src/util/IdGen.js": "./src/util/IdGen.js?v=1.2.0"
+<script>
+(async () => {
+  const MODULES = [
+    './app.js',
+    './src/ui.js',
+    './src/state/LocalStoragePersistence.js',
+    './src/state/StateManager.js',
+    './src/view/Selectors.js',
+    './src/ledger/LedgerEngine.js',
+    './src/ledger/FifoEngine.js',
+    './src/ledger/DividendEngine.js',
+    './src/math/Xirr.js',
+    './src/io/QuoteFetcher.js',
+    './src/util/MathUtils.js',
+    './src/util/EventBus.js',
+    './src/util/IdGen.js'
+  ];
+  let v;
+  try {
+    const r = await fetch('./version.json?_=' + Date.now(), { cache: 'no-store' });
+    v = (await r.json()).version;
+  } catch (e) {
+    // Network/parsing failure — fall back to a per-load timestamp so the
+    // user at least sees a fresh build instead of a broken page.
+    v = String(Date.now());
   }
-}
+  const importmap = { imports: Object.fromEntries(MODULES.map((p) => [p, `${p}?v=${v}`])) };
+  const mapEl = document.createElement('script');
+  mapEl.type = 'importmap';
+  mapEl.textContent = JSON.stringify(importmap);
+  document.head.appendChild(mapEl);
+
+  const appEl = document.createElement('script');
+  appEl.type = 'module';
+  appEl.src = `./app.js?v=${v}`;
+  document.body.appendChild(appEl);
+})();
 </script>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -800,6 +819,6 @@
   </div>
 </dialog>
 
-<script type="module" src="./app.js?v=1.2.0"></script>
+<!-- app.js is loaded by the cache-busting bootstrap in <head>. -->
 </body>
 </html>
