@@ -747,52 +747,58 @@ export class UI {
     });
   }
 
+  async _refreshQuotes(...buttons) {
+    const state = this.sm.getState();
+    const derived = this.sm.getDerived();
+    const activeTickers = derived.lots.map((l) => l.ticker);
+    const tickers = [...new Set([...Object.keys(state.quotes || {}), ...activeTickers])];
+    if (!tickers.includes('ILS=X')) tickers.push('ILS=X');
+    if (!tickers.length) return toast('אין מניות לעדכון');
+
+    const btns = buttons.filter(Boolean);
+    btns.forEach((b) => { b.disabled = true; b.classList.add('refreshing'); });
+    toast(`מושך נתונים עבור ${tickers.length} טיקרים...`);
+
+    try {
+      const newPrices = await fetchQuotes(tickers);
+      const stockTickers = tickers.filter((t) => t !== 'ILS=X');
+      const succeeded = [];
+      const failed = [];
+
+      Object.keys(newPrices).forEach((t) => {
+        if (t === 'ILS=X') { this.sm.setFxRate(newPrices[t]); return; }
+        const q = state.quotes[t] || {};
+        const currency = q.currency || (t.endsWith('.TA') || /^\d+(\.TA)?$/.test(t) ? 'ILS-Agorot' : 'USD');
+        this.sm.upsertQuote({ ticker: t, company: q.company || t, price: newPrices[t], currency, asOf: new Date().toISOString().slice(0, 10), source: 'api' });
+        succeeded.push(t);
+      });
+
+      stockTickers.forEach((t) => { if (!newPrices[t]) failed.push(t); });
+
+      const fxLine = newPrices['ILS=X'] ? ` · USD/ILS ${newPrices['ILS=X'].toFixed(3)}` : '';
+      const summary = `✓ ${succeeded.length}/${stockTickers.length} עודכנו${fxLine}` +
+        (failed.length ? ` | ✗ נכשלו: ${failed.join(', ')}` : '');
+      toast(summary);
+      console.log('[QuoteFetch] succeeded:', succeeded, '| failed:', failed, '| raw:', newPrices);
+      this.renderAll();
+    } catch (e) {
+      console.error('[QuoteFetch] unexpected error:', e);
+      toast('שגיאה בעת משיכת הנתונים');
+    } finally {
+      btns.forEach((b) => { b.disabled = false; b.classList.remove('refreshing'); });
+    }
+  }
+
   _bindSettings() {
     const quoteBox = $('#settings-quotes');
     if (quoteBox) {
       quoteBox.insertAdjacentHTML('beforebegin', `<button id="btn-fetch-quotes" class="bg-primary/20 text-primary px-4 py-2 rounded-xl text-sm font-semibold hover:bg-primary/30 transition-colors mb-4 flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">sync</span> רענן שערים (Yahoo)</button>`);
-      $('#btn-fetch-quotes').addEventListener('click', async () => {
-        const state = this.sm.getState();
-        const derived = this.sm.getDerived();
-        const activeTickers = derived.lots.map((l) => l.ticker);
-        const tickers = [...new Set([...Object.keys(state.quotes || {}), ...activeTickers])];
-        if (!tickers.includes('ILS=X')) tickers.push('ILS=X');
-        if (!tickers.length) return toast('אין מניות לעדכון');
-
-        const btn = $('#btn-fetch-quotes');
-        if (btn) btn.disabled = true;
-        toast(`מושך נתונים עבור ${tickers.length} טיקרים...`);
-
-        try {
-          const newPrices = await fetchQuotes(tickers);
-          const stockTickers = tickers.filter((t) => t !== 'ILS=X');
-          const succeeded = [];
-          const failed = [];
-
-          Object.keys(newPrices).forEach((t) => {
-            if (t === 'ILS=X') { this.sm.setFxRate(newPrices[t]); return; }
-            const q = state.quotes[t] || {};
-            const currency = q.currency || (t.endsWith('.TA') || /^\d+(\.TA)?$/.test(t) ? 'ILS-Agorot' : 'USD');
-            this.sm.upsertQuote({ ticker: t, company: q.company || t, price: newPrices[t], currency, asOf: new Date().toISOString().slice(0, 10), source: 'api' });
-            succeeded.push(t);
-          });
-
-          stockTickers.forEach((t) => { if (!newPrices[t]) failed.push(t); });
-
-          const fxLine = newPrices['ILS=X'] ? ` · USD/ILS ${newPrices['ILS=X'].toFixed(3)}` : '';
-          const summary = `✓ ${succeeded.length}/${stockTickers.length} עודכנו${fxLine}` +
-            (failed.length ? ` | ✗ נכשלו: ${failed.join(', ')}` : '');
-          toast(summary);
-          console.log('[QuoteFetch] succeeded:', succeeded, '| failed:', failed, '| raw:', newPrices);
-          this.renderAll();
-        } catch (e) {
-          console.error('[QuoteFetch] unexpected error:', e);
-          toast('שגיאה בעת משיכת הנתונים');
-        } finally {
-          if (btn) btn.disabled = false;
-        }
-      });
+      $('#btn-fetch-quotes').addEventListener('click', () =>
+        this._refreshQuotes($('#btn-fetch-quotes'), $('#btn-fetch-quotes-hero')));
     }
+
+    $('#btn-fetch-quotes-hero')?.addEventListener('click', () =>
+      this._refreshQuotes($('#btn-fetch-quotes-hero'), $('#btn-fetch-quotes')));
 
     $('#btn-add-kid').addEventListener('click', () => {
       const name = prompt('שם הילד/ה החדש/ה');
@@ -900,7 +906,7 @@ function kidCardHtml(kid, index = 0) {
 
   return `
     <div class="kid-card group flex flex-col gap-stack-md" data-kid-id="${escapeHtml(kid.id)}">
-      <div class="kid-glow" style="background: ${c.glow};"></div>
+      <div class="kid-glow" style="background: radial-gradient(circle at top left, ${c.glow} 0%, transparent 55%);"></div>
 
       <div class="flex justify-between items-start z-10 relative">
         <div class="flex items-center gap-stack-sm">
