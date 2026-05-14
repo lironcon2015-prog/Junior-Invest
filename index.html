@@ -3,7 +3,33 @@
 <head>
 <meta charset="utf-8" />
 <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+<meta http-equiv="Cache-Control" content="no-cache, must-revalidate" />
 <title>JuniorInvest</title>
+<!--
+  Cache-busting via importmap: every module URL is remapped to include
+  ?v=APP_VERSION so a version bump (in version.json AND below) invalidates
+  the browser/CDN cache for every module on the next reload of index.html.
+  Bump APP_VERSION in lockstep with version.json when you ship changes.
+-->
+<script type="importmap">
+{
+  "imports": {
+    "./app.js": "./app.js?v=1.2.0",
+    "./src/ui.js": "./src/ui.js?v=1.2.0",
+    "./src/state/LocalStoragePersistence.js": "./src/state/LocalStoragePersistence.js?v=1.2.0",
+    "./src/state/StateManager.js": "./src/state/StateManager.js?v=1.2.0",
+    "./src/view/Selectors.js": "./src/view/Selectors.js?v=1.2.0",
+    "./src/ledger/LedgerEngine.js": "./src/ledger/LedgerEngine.js?v=1.2.0",
+    "./src/ledger/FifoEngine.js": "./src/ledger/FifoEngine.js?v=1.2.0",
+    "./src/ledger/DividendEngine.js": "./src/ledger/DividendEngine.js?v=1.2.0",
+    "./src/math/Xirr.js": "./src/math/Xirr.js?v=1.2.0",
+    "./src/io/QuoteFetcher.js": "./src/io/QuoteFetcher.js?v=1.2.0",
+    "./src/util/MathUtils.js": "./src/util/MathUtils.js?v=1.2.0",
+    "./src/util/EventBus.js": "./src/util/EventBus.js?v=1.2.0",
+    "./src/util/IdGen.js": "./src/util/IdGen.js?v=1.2.0"
+  }
+}
+</script>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
@@ -774,6 +800,6 @@
   </div>
 </dialog>
 
-<script type="module" src="./app.js"></script>
+<script type="module" src="./app.js?v=1.2.0"></script>
 </body>
 </html>
