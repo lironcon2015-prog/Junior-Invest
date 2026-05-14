@@ -140,6 +140,7 @@ export class UI {
       tbody.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-on-surface-variant">אין אחזקות עדיין</td></tr>`;
       return;
     }
+    const ltr = (s) => `<bdi dir="ltr" style="unicode-bidi: isolate;">${s}</bdi>`;
     tbody.innerHTML = vm.rows.map((r) => {
       const hasLots = r.lots.length > 0;
       const lotsId = `lots-${r.ticker.replace(/[^a-zA-Z0-9]/g, '_')}`;
@@ -161,28 +162,23 @@ export class UI {
               </div>
             </div>
           </td>
-          <td data-label="סה״כ מניות" class="py-5 text-on-surface-variant">${r.totalSharesFmt}</td>
-          <td data-label="מחיר נוכחי" class="py-5 text-on-surface-variant">
-            <span>
-              ${r.priceFmt}
-              <span class="text-[10px] uppercase tracking-widest opacity-70 mr-2">${escapeHtml(formatDateHe(r.asOf))}</span>
-            </span>
-          </td>
-          <td data-label="שווי בש״ח" class="py-5 text-white font-data-tabular">${r.valueFmt}</td>
+          <td data-label="סה״כ מניות" class="py-5 text-on-surface-variant">${ltr(escapeHtml(r.totalSharesFmt))}</td>
+          <td data-label="מחיר נוכחי" class="py-5 text-on-surface-variant whitespace-nowrap">${ltr(escapeHtml(r.priceFmt) + ` <span style="opacity:0.6;font-size:0.85em;">· ${escapeHtml(formatDateHe(r.asOf))}</span>`)}</td>
+          <td data-label="שווי בש״ח" class="py-5 text-white font-data-tabular">${ltr(escapeHtml(r.valueFmt))}</td>
           <td data-label="פיצול בין הילדים" class="cell-block py-5">
             <div class="flex flex-col gap-1 text-xs">
               ${r.perKid.map((k) => `
                 <div class="flex items-center justify-between gap-3 bg-white/[0.03] border border-white/5 rounded-lg px-3 py-1.5">
                   <span class="text-on-surface-variant">${escapeHtml(k.kidName)}</span>
-                  <span class="font-data-tabular text-white">${k.sharesFmt}</span>
+                  <span class="font-data-tabular text-white">${ltr(escapeHtml(k.sharesFmt))}</span>
                 </div>`).join('')}
             </div>
           </td>
         </tr>
         ${hasLots ? `<tr id="${escapeHtml(lotsId)}" class="lots-row hidden border-b border-white/5">
           <td colspan="5" class="pb-3 px-4">
-            <div class="lots-inner rounded-xl bg-white/[0.02] border border-white/5 overflow-hidden">
-              <table class="w-full text-right text-xs" style="min-width: 420px;">
+            <div class="lots-inner rounded-xl bg-white/[0.02] border border-white/5">
+              <table class="lots-table w-full text-right text-xs" style="min-width: 420px;">
                 <thead>
                   <tr class="border-b border-white/5">
                     <th class="py-2 pr-4 font-semibold text-on-surface-variant/60 font-label-caps uppercase tracking-wider">תאריך</th>
@@ -194,12 +190,12 @@ export class UI {
                 </thead>
                 <tbody>
                   ${r.lots.map((lot) => `
-                    <tr class="border-b border-white/[0.03] last:border-0">
-                      <td class="py-2 pr-4 text-on-surface-variant whitespace-nowrap">${escapeHtml(formatDateHe(lot.openDate))}</td>
-                      <td class="py-2 text-on-surface-variant whitespace-nowrap">${escapeHtml(lot.buyPriceFmt)}</td>
-                      <td class="py-2 text-on-surface-variant whitespace-nowrap">${escapeHtml(lot.currentPriceFmt)}</td>
-                      <td class="py-2 font-data-tabular whitespace-nowrap ${lot.pctSign === 'pos' ? 'text-emerald-400' : lot.pctSign === 'neg' ? 'text-red-400' : 'text-on-surface-variant'}">${escapeHtml(lot.pctChangeFmt)}</td>
-                      <td class="py-2 pl-4 font-data-tabular whitespace-nowrap ${lot.xirrSign === 'pos' ? 'text-emerald-400' : lot.xirrSign === 'neg' ? 'text-red-400' : 'text-on-surface-variant'}">${escapeHtml(lot.xirrLotFmt)}</td>
+                    <tr class="lot-row border-b border-white/[0.03] last:border-0">
+                      <td data-label="תאריך" class="lot-date py-2 pr-4 text-on-surface-variant whitespace-nowrap">${ltr(escapeHtml(formatDateHe(lot.openDate)))}</td>
+                      <td data-label="מחיר קנייה" class="py-2 text-on-surface-variant whitespace-nowrap">${ltr(escapeHtml(lot.buyPriceFmt))}</td>
+                      <td data-label="מחיר נוכחי" class="py-2 text-on-surface-variant whitespace-nowrap">${ltr(escapeHtml(lot.currentPriceFmt))}</td>
+                      <td data-label="שינוי %" class="py-2 font-data-tabular whitespace-nowrap ${lot.pctSign === 'pos' ? 'text-emerald-400' : lot.pctSign === 'neg' ? 'text-red-400' : 'text-on-surface-variant'}">${ltr(escapeHtml(lot.pctChangeFmt))}</td>
+                      <td data-label="תשואה שנתית" class="py-2 pl-4 font-data-tabular whitespace-nowrap ${lot.xirrSign === 'pos' ? 'text-emerald-400' : lot.xirrSign === 'neg' ? 'text-red-400' : 'text-on-surface-variant'}">${ltr(escapeHtml(lot.xirrLotFmt))}</td>
                     </tr>`).join('')}
                 </tbody>
               </table>
