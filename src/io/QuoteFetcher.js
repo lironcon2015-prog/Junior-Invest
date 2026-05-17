@@ -1,15 +1,17 @@
-const TIMEOUT_MS = 8000;
+const TIMEOUT_MS = 6000;
+const MAX_PARALLEL = 5;
 
-function fetchWithTimeout(url) {
+function fetchWithTimeout(url, timeoutMs = TIMEOUT_MS) {
   const ctrl = new AbortController();
-  const id = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
+  const id = setTimeout(() => ctrl.abort(), timeoutMs);
   return fetch(url, { signal: ctrl.signal }).finally(() => clearTimeout(id));
 }
 
 async function proxyFetch(targetUrl) {
-  // Try corsproxy first (no JSON wrapper), then allorigins (JSON wrapper)
   const attempts = [
     { url: 'https://corsproxy.io/?url=' + encodeURIComponent(targetUrl), json: false },
+    { url: 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(targetUrl), json: false },
+    { url: 'https://api.allorigins.win/raw?url=' + encodeURIComponent(targetUrl), json: false },
     { url: 'https://api.allorigins.win/get?url=' + encodeURIComponent(targetUrl), json: true },
   ];
   for (const { url, json } of attempts) {
@@ -32,7 +34,6 @@ export async function getQuote(ticker) {
     try {
       const html = await proxyFetch('https://www.funder.co.il/fund/' + rawId);
       if (!html) throw new Error('empty');
-      console.log('[QuoteFetcher] Funder snippet:', html.substring(0, 800));
       const match =
         html.match(/id="fundLastRate"[^>]*>\s*([\d.,]+)/i) ||
         html.match(/שער[^0-9]*([0-9]{3,5}\.[0-9]{1,3})/i) ||
@@ -60,12 +61,30 @@ export async function getQuote(ticker) {
   return null;
 }
 
-// Batch wrapper used by the UI
-export async function fetchQuotes(tickers) {
+// Run async tasks in parallel with a concurrency cap.
+async function runWithConcurrency(items, limit, worker) {
+  const results = new Array(items.length);
+  let i = 0;
+  const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (i < items.length) {
+      const idx = i++;
+      results[idx] = await worker(items[idx]);
+    }
+  });
+  await Promise.all(runners);
+  return results;
+}
+
+// Batch wrapper used by the UI. Runs in parallel with a concurrency cap so the
+// spinner can never hang for the sequential sum of all per-ticker timeouts.
+export async function fetchQuotes(tickers, { onProgress } = {}) {
   const results = {};
-  for (const ticker of tickers) {
+  let done = 0;
+  await runWithConcurrency(tickers, MAX_PARALLEL, async (ticker) => {
     const price = await getQuote(ticker);
     if (price != null) results[ticker] = price;
-  }
+    done++;
+    if (onProgress) onProgress({ done, total: tickers.length, ticker, ok: price != null });
+  });
   return results;
 }
