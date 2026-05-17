@@ -10,7 +10,7 @@ import {
   fmtIls,
 } from './view/Selectors.js';
 import { xirr } from './math/Xirr.js';
-import { fetchQuotes } from './io/QuoteFetcher.js';
+import { fetchQuotes, getWorkerUrl, setWorkerUrl } from './io/QuoteFetcher.js';
 
 const $  = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
@@ -301,6 +301,9 @@ export class UI {
   _renderSettings(state) {
     const fx = $('#settings-fx');
     if (fx && document.activeElement !== fx) fx.value = state.settings.lastFxRate;
+
+    const wu = $('#settings-worker-url');
+    if (wu && document.activeElement !== wu) wu.value = getWorkerUrl();
 
     const list = $('#settings-kids');
     if (list) {
@@ -836,6 +839,11 @@ export class UI {
 
     $('#settings-fx').addEventListener('change', (e) => {
       this.sm.setFxRate(parseFloat(e.target.value));
+    });
+
+    $('#settings-worker-url')?.addEventListener('change', (e) => {
+      setWorkerUrl(e.target.value);
+      toast(e.target.value.trim() ? 'נשמר Worker URL' : 'נמחק Worker URL');
     });
   }
 
