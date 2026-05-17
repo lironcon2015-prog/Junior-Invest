@@ -25,4 +25,4 @@ A multi-kid stock portfolio tracker: parent buys shares in one brokerage account
 - No WITHDRAW in v1.
 - Quote source: manual `quotes` map; optional API refresh later.
 - Persistence: `LocalStoragePersistence`, key `juniorinvest:v1`.
-- `index.html` lives at repo root so GitHub Pages serves the app at the custom domain `https://lironcon.com` (configured via the `CNAME` file at repo root).
+- `index.html` lives at repo root so GitHub Pages serves the app at the custom subdomain `https://invest.lironcon.com` (configured via the `CNAME` file at repo root). The apex `lironcon.com` is reserved for other sites on other subdomains.
