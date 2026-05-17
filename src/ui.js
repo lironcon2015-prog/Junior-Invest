@@ -765,10 +765,25 @@ export class UI {
 
     const btns = buttons.filter(Boolean);
     btns.forEach((b) => { b.disabled = true; b.classList.add('refreshing'); });
-    toast(`מושך נתונים עבור ${tickers.length} טיקרים...`);
+
+    const status = stickyToast(`מושך נתונים עבור ${tickers.length} טיקרים...`);
+
+    // Hard cap: never let the spinner hang longer than this regardless of
+    // proxy/network state.
+    const HARD_TIMEOUT_MS = 30000;
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('timeout')), HARD_TIMEOUT_MS),
+    );
 
     try {
-      const newPrices = await fetchQuotes(tickers);
+      const newPrices = await Promise.race([
+        fetchQuotes(tickers, {
+          onProgress: ({ done, total, ticker, ok }) => {
+            status.update(`(${done}/${total}) ${ok ? '✓' : '✗'} ${ticker}`);
+          },
+        }),
+        timeoutPromise,
+      ]);
       const stockTickers = tickers.filter((t) => t !== 'ILS=X');
       const succeeded = [];
       const failed = [];
@@ -786,12 +801,15 @@ export class UI {
       const fxLine = newPrices['ILS=X'] ? ` · USD/ILS ${newPrices['ILS=X'].toFixed(3)}` : '';
       const summary = `✓ ${succeeded.length}/${stockTickers.length} עודכנו${fxLine}` +
         (failed.length ? ` | ✗ נכשלו: ${failed.join(', ')}` : '');
-      toast(summary);
+      status.finish(summary, succeeded.length ? 4000 : 7000);
       console.log('[QuoteFetch] succeeded:', succeeded, '| failed:', failed, '| raw:', newPrices);
       this.renderAll();
     } catch (e) {
       console.error('[QuoteFetch] unexpected error:', e);
-      toast('שגיאה בעת משיכת הנתונים');
+      const msg = e?.message === 'timeout'
+        ? 'התזמן עבר 30 שניות - כל הפרוקסים נכשלו. נסה שוב מאוחר יותר.'
+        : 'שגיאה בעת משיכת הנתונים';
+      status.finish(msg, 7000);
     } finally {
       btns.forEach((b) => { b.disabled = false; b.classList.remove('refreshing'); });
     }
@@ -870,6 +888,23 @@ function toast(msg) {
   t.textContent = msg;
   document.body.appendChild(t);
   setTimeout(() => t.remove(), 2000);
+}
+
+// Persistent toast that stays visible until finish() is called - useful for
+// long-running ops like quote refresh where the user (especially on mobile)
+// needs to see live progress and the final outcome.
+function stickyToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'fixed bottom-8 left-1/2 -translate-x-1/2 bg-background/90 border border-white/10 backdrop-blur-xl px-6 py-3 rounded-2xl text-white text-sm z-50 shadow-2xl max-w-[90vw] text-center';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  return {
+    update(next) { t.textContent = next; },
+    finish(next, holdMs = 4000) {
+      t.textContent = next;
+      setTimeout(() => t.remove(), holdMs);
+    },
+  };
 }
 
 function pillHtml({ tone, text }) {
