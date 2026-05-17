@@ -1,5 +1,19 @@
 const TIMEOUT_MS = 6000;
 const MAX_PARALLEL = 5;
+const WORKER_URL_KEY = 'juniorinvest:quoteProxy';
+
+export function getWorkerUrl() {
+  try { return (localStorage.getItem(WORKER_URL_KEY) || '').trim(); }
+  catch { return ''; }
+}
+
+export function setWorkerUrl(url) {
+  try {
+    const trimmed = (url || '').trim().replace(/\/+$/, '');
+    if (trimmed) localStorage.setItem(WORKER_URL_KEY, trimmed);
+    else localStorage.removeItem(WORKER_URL_KEY);
+  } catch {}
+}
 
 function fetchWithTimeout(url, timeoutMs = TIMEOUT_MS) {
   const ctrl = new AbortController();
@@ -8,12 +22,17 @@ function fetchWithTimeout(url, timeoutMs = TIMEOUT_MS) {
 }
 
 async function proxyFetch(targetUrl) {
-  const attempts = [
+  const workerUrl = getWorkerUrl();
+  const attempts = [];
+  if (workerUrl) {
+    attempts.push({ url: workerUrl + '/?url=' + encodeURIComponent(targetUrl), json: false });
+  }
+  attempts.push(
     { url: 'https://corsproxy.io/?url=' + encodeURIComponent(targetUrl), json: false },
     { url: 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(targetUrl), json: false },
     { url: 'https://api.allorigins.win/raw?url=' + encodeURIComponent(targetUrl), json: false },
     { url: 'https://api.allorigins.win/get?url=' + encodeURIComponent(targetUrl), json: true },
-  ];
+  );
   for (const { url, json } of attempts) {
     try {
       const res = await fetchWithTimeout(url);
